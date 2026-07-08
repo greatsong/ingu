@@ -413,7 +413,7 @@ function ageBySex(cells){
   return { m, f };
 }
 
-// Plotly 인구 피라미드 (5세 단위)
+// Plotly 인구 피라미드 (1세 단위)
 function drawPyramid(m, f){
   const ages=Array.from({length:101},(_,i)=&gt;i);   // 0~100세(100+) 1세 단위
   const mx=Math.max(...m,...f,1);
