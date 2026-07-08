@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>우리 동네 인구 구조 🏘️</title>
+<style>
+  :root{
+    --bg:#FFFDF7; --card:#FFF6E0; --border:#F0E2BC;
+    --accent:#E8930C; --gold:#F4B400; --text:#3A2E1A; --muted:#9A8B6A;
+    --shadow:rgba(180,140,20,.18); --male:#4C8DF6; --female:#F4789B;
+  }
+  body[data-theme="mint"]{--bg:#F4FFFB;--card:#E7FBF3;--border:#C7F0E0;--accent:#0EA371;--gold:#34D399;--text:#0F3D2E;--muted:#6FA992;--shadow:rgba(16,185,129,.18);}
+  body[data-theme="berry"]{--bg:#FFF7FA;--card:#FFE9F1;--border:#FBD5E5;--accent:#E23C86;--gold:#F9A8D4;--text:#4A1D33;--muted:#B98098;--shadow:rgba(236,72,153,.18);}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);transition:background .3s;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;}
+  .wrap{max-width:560px;margin:0 auto;padding:24px 18px 48px;}
+  .themes{display:flex;gap:6px;justify-content:flex-end;margin-bottom:8px;}
+  .themes button{border:1px solid var(--border);background:#fff;color:var(--text);border-radius:99px;
+    padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .themes button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em;margin:.1rem 0;}
+  h1 .a{color:var(--accent);}
+  .under{width:60px;height:4px;border-radius:99px;margin:.4rem 0 .6rem;
+    background:linear-gradient(90deg,var(--gold),var(--accent));}
+  input#q{width:100%;font-size:1rem;padding:.6rem .7rem;border:1px solid var(--border);
+    border-radius:.7rem;background:#fff;color:var(--text);margin-bottom:14px;}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;
+    box-shadow:0 1px 4px var(--shadow);}
+  .card .k{font-size:.74rem;color:var(--muted);font-weight:700;}
+  .card .v{font-size:1.15rem;font-weight:800;color:var(--accent);margin-top:2px;}
+  .legend{font-size:.82rem;color:var(--muted);margin-bottom:8px;}
+  .legend b.m{color:var(--male);} .legend b.f{color:var(--female);}
+  .py-row{display:flex;align-items:center;gap:6px;margin:3px 0;}
+  .side{flex:1;display:flex;} .side.m{justify-content:flex-end;}
+  .bar{height:17px;border-radius:5px;transition:width .4s ease;}
+  .bar.m{background:var(--male);} .bar.f{background:var(--female);}
+  .lbl{width:52px;text-align:center;color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums;}
+  .foot{color:var(--muted);font-size:.8rem;margin-top:18px;}
+  @media(max-width:520px){.cards{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="themes" id="themes">
+      <button data-th="" class="on">🍞 크림</button>
+      <button data-th="mint">🌿 민트</button>
+      <button data-th="berry">🍓 베리</button>
+    </div>
+    <h1>🏘️ 우리 동네 <span class="a">인구 구조</span></h1>
+    <div class="under"></div>
+    <input id="q" list="regions" placeholder="동네 이름 입력 (예: 서울특별시 종로구)">
+    <datalist id="regions"></datalist>
+    <div class="cards" id="cards"></div>
+    <div class="legend">연령대별 인구 · <b class="m">■ 남자</b> <b class="f">■ 여자</b></div>
+    <div id="py"></div>
+    <p class="foot">데이터: 행정안전부 주민등록 인구(2026.05)</p>
+  </div>
+
+<script>
+const 기본지역 = "서울특별시 종로구"; // ← 보고 싶은 지역으로 바꿔도 돼요
+const DATA_URL = "https://greatsong.github.io/modeudata-population-web/population_2026_05.csv";
+
+let HEADER = [], INDEX = {};
+const num = s => parseInt(s,10) || 0;
+const BANDS = [[0,9],[10,19],[20,29],[30,39],[40,49],[50,59],[60,69],[70,79],[80,89],[90,150]];
+
+function ageArrays(cells){
+  const male = new Array(101).fill(0), female = new Array(101).fill(0);
+  for(let i=2;i<HEADER.length;i++){
+    const h = HEADER[i]; const m = h.match(/_(\d+)세/); if(!m) continue;
+    const age = Math.min(100, +m[1]); const v = num(cells[i]);
+    if(h.startsWith('남자')) male[age]+=v; else female[age]+=v;
+  }
+  return { male, female };
+}
+const rangeSum = (a,lo,hi)=>{ let s=0; for(let i=lo;i<=hi;i++) s+=a[i]; return s; };
+const toBands = a => BANDS.map(([lo,hi])=>rangeSum(a,lo,Math.min(hi,100)));
+
+function show(name){
+  const cells = INDEX[name]; if(!cells) return;
+  const {male,female} = ageArrays(cells);
+  const mT = rangeSum(male,0,100), fT = rangeSum(female,0,100), total = mT+fT;
+  const old = rangeSum(male,65,100) + rangeSum(female,65,100);
+  const young = rangeSum(male,0,14) + rangeSum(female,0,14);
+  const pct = n => total ? (n/total*100).toFixed(1)+'%' : '-';
+
+  document.getElementById('cards').innerHTML = `
+    <div class="card"><div class="k">총인구</div><div class="v">${total.toLocaleString()}</div></div>
+    <div class="card"><div class="k">남 / 여</div><div class="v" style="font-size:.92rem">${mT.toLocaleString()}<br>${fT.toLocaleString()}</div></div>
+    <div class="card"><div class="k">고령화율 65+</div><div class="v">${pct(old)}</div></div>
+    <div class="card"><div class="k">유소년 0-14</div><div class="v">${pct(young)}</div></div>`;
+
+  const mB = toBands(male), fB = toBands(female); const max = Math.max(...mB, ...fB, 1);
+  let html = '';
+  for(let i=BANDS.length-1;i>=0;i--){
+    const b = BANDS[i], lbl = b[1]>=150 ? `${b[0]}+` : `${b[0]}-${b[1]}`;
+    html += `<div class="py-row">
+      <div class="side m"><div class="bar m" style="width:${mB[i]/max*100}%"></div></div>
+      <div class="lbl">${lbl}</div>
+      <div class="side f"><div class="bar f" style="width:${fB[i]/max*100}%"></div></div>
+    </div>`;
+  }
+  document.getElementById('py').innerHTML = html;
+}
+
+document.getElementById('themes').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  document.body.dataset.theme = b.dataset.th; localStorage.setItem('pop_theme', b.dataset.th);
+  document.querySelectorAll('.themes button').forEach(x=>x.classList.toggle('on', x===b));
+});
+const st = localStorage.getItem('pop_theme') || '';
+document.body.dataset.theme = st;
+document.querySelectorAll('.themes button').forEach(x=>x.classList.toggle('on', x.dataset.th===st));
+
+(async ()=>{
+  const text = await (await fetch(DATA_URL)).text();
+  const lines = text.trim().split(/\r?\n/);
+  HEADER = lines[0].replace(/^﻿/,'').split(',');
+  const dl = document.getElementById('regions');
+  lines.slice(1).forEach(line=>{
+    const cells = line.split(','); INDEX[cells[0]] = cells;
+    const o = document.createElement('option'); o.value = cells[0]; dl.appendChild(o);
+  });
+  const q = document.getElementById('q'); q.value = 기본지역;
+  q.addEventListener('input', ()=>{ if(INDEX[q.value]) show(q.value); });
+  show(기본지역);
+})().catch(e=>document.getElementById('cards').textContent = '⚠️ ' + e.message);
+</script>
+</body>
+</html>

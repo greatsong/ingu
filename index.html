@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>우리 동네 인구 구조 앱 만들기 · 바이브코딩 퀘스트</title>
+<style>
+  :root{
+    --gold:#F4B400; --accent:#E8930C; --accent-soft:#FFF0D0;
+    --bg:#FFFDF7; --card:#FFF6E0; --card2:#FFFCF3;
+    --ink:#3A2E1A; --muted:#9A8B6A; --line:#F0E2BC;
+    --code-bg:#2B2721; --code-ink:#F5ECD5;
+    --ok:#2E9E5B; --ok-soft:#ECF8F0; --ok-line:#BFE6CC;
+    --tip:#C98A12; --tip-soft:#FFF4DA; --tip-line:#FBE3AC;
+    --think:#3E7BE0; --think-soft:#EDF3FF; --think-line:#CFE0FB;
+    --shadow:rgba(180,140,20,.16);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Segoe UI",Roboto,sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;}
+  header{position:sticky; top:0; z-index:20; background:#FFFDF7ee; backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line); box-shadow:0 1px 10px var(--shadow);}
+  .bar{max-width:820px; margin:0 auto; padding:10px 18px;}
+  .brand{display:flex; align-items:center; gap:8px; font-weight:800; font-size:15px;}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);transition:.3s;}
+  .stepper{display:flex; gap:6px; margin-top:9px;}
+  .step{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+    font-size:11px; color:var(--muted); cursor:pointer; user-select:none;}
+  .step .pill{width:100%; height:7px; border-radius:99px; background:var(--line); transition:.3s;}
+  .step.done .pill{background:var(--gold);}
+  .step.active .pill{background:var(--accent);}
+  .step.active{color:var(--accent); font-weight:800;}
+  .step .em{font-size:15px;}
+  main{max-width:820px; margin:0 auto; padding:26px 18px 130px;}
+  .page{display:none; animation:in .35s ease;}
+  .page.show{display:block;}
+  @keyframes in{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
+  .lvtag{display:inline-flex; align-items:center; gap:8px; font-weight:800; font-size:13px;
+    color:#fff; background:var(--accent); padding:5px 13px; border-radius:99px; letter-spacing:.3px;
+    box-shadow:0 3px 10px var(--shadow);}
+  .mins{margin-left:8px; font-size:12px; color:var(--muted); font-weight:700;}
+  h1.title{font-size:30px; margin:14px 0 4px; letter-spacing:-.02em; position:relative;}
+  h1.title::after{content:""; display:block; width:64px; height:4px; border-radius:999px; margin-top:9px;
+    background:linear-gradient(90deg,var(--gold),var(--accent));}
+  .lead{color:#6B5836; font-size:16px; margin:16px 0 18px;}
+  .power{background:var(--accent-soft); border:1px solid color-mix(in srgb, var(--accent) 30%, #fff);
+    border-left:5px solid var(--accent); border-radius:12px; padding:12px 16px; margin:0 0 22px;
+    font-weight:700; color:var(--ink);}
+  .power small{display:block; font-weight:800; color:var(--accent); font-size:12px; letter-spacing:.5px; margin-bottom:2px;}
+  ol.steps{list-style:none; counter-reset:s; padding:0; margin:0 0 8px;}
+  ol.steps>li{counter-increment:s; position:relative; padding:4px 0 16px 44px; margin:0 0 0 15px;
+    border-left:2px dashed var(--line);}
+  ol.steps>li:last-child{border-left:2px solid transparent;}
+  ol.steps>li::before{content:counter(s); position:absolute; left:-15px; top:0;
+    width:30px;height:30px;border-radius:50%; background:var(--accent); color:#fff;
+    font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 8px var(--shadow);}
+  ol.steps b{color:var(--ink);}
+  .kbd{display:inline-block; background:#fff; border:1px solid var(--line); border-bottom-width:2px;
+    border-radius:6px; padding:1px 7px; font-size:13px; font-weight:700; font-family:inherit; color:var(--ink);}
+  .path{background:var(--accent-soft); color:var(--accent); font-weight:800; padding:1px 7px; border-radius:6px; font-size:13.5px;}
+  .tabs{display:flex; gap:8px; margin:6px 0 14px; flex-wrap:wrap;}
+  .tab{border:1px solid var(--line); background:#fff; color:var(--muted); font-weight:700;
+    padding:9px 16px; border-radius:99px; cursor:pointer; font-size:14px; font-family:inherit; transition:.15s;}
+  .tab.active{background:var(--accent); color:#fff; border-color:var(--accent); box-shadow:0 3px 10px var(--shadow);}
+  .pane[hidden]{display:none;}
+  .cbox{border:1px solid var(--line); border-radius:14px; overflow:hidden; margin:0 0 14px;
+    background:var(--card2); box-shadow:0 1px 4px var(--shadow);}
+  .cbox-head{display:flex; align-items:center; justify-content:space-between;
+    padding:9px 14px; background:var(--card); border-bottom:1px solid var(--line);}
+  .cbox-label{font-weight:800; font-size:13px; color:var(--ink);}
+  .copy{border:none; background:var(--accent); color:#fff; font-weight:800; font-size:13px;
+    padding:7px 15px; border-radius:8px; cursor:pointer; font-family:inherit; transition:.15s; white-space:nowrap;}
+  .copy:hover{filter:brightness(1.07);}
+  .copy.done{background:var(--ok);}
+  textarea.code, textarea.prompt, input.urlbox{width:100%; border:none; resize:none; display:block;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;}
+  textarea.code{background:var(--code-bg); color:var(--code-ink); padding:14px; font-size:12.5px; line-height:1.55; height:300px;}
+  textarea.prompt{background:#fffdf5; color:#3A2E1A; padding:14px; font-size:13.5px; line-height:1.6; height:210px;}
+  input.urlbox{background:var(--code-bg); color:#FDD98A; padding:13px 14px; font-size:12.5px; font-weight:600;}
+  .hl{color:var(--accent); font-weight:800;}
+  .box{border-radius:12px; padding:13px 16px; margin:16px 0; font-size:14.5px;}
+  .box>b:first-child{display:block; margin-bottom:2px;}
+  .check{background:var(--ok-soft); border:1px solid var(--ok-line);} .check b{color:var(--ok);}
+  .tipbox{background:var(--tip-soft); border:1px solid var(--tip-line);} .tipbox b{color:#B45309;}
+  .think{background:var(--think-soft); border:1px solid var(--think-line);} .think b{color:var(--think);}
+  .cover{text-align:center; padding-top:14px;}
+  .cover .emoji{font-size:60px; line-height:1;}
+  .cover h1{font-size:33px; margin:14px 0 6px; letter-spacing:-.03em;}
+  .cover .sub{color:var(--muted); font-size:17px; margin-bottom:22px;}
+  .cover .sub b{color:var(--accent);}
+  .prereq{max-width:560px; margin:0 auto 24px; text-align:left;
+    background:linear-gradient(180deg,#FFFBEF,var(--card));
+    border:1.5px solid var(--gold); border-radius:18px; padding:20px 22px;
+    box-shadow:0 8px 26px var(--shadow); position:relative;}
+  .prereq .pr-badge{position:absolute; top:-12px; left:22px; background:var(--accent); color:#fff;
+    font-size:12px; font-weight:800; padding:4px 12px; border-radius:99px; letter-spacing:.3px; box-shadow:0 3px 10px var(--shadow);}
+  .prereq h3{margin:6px 0 8px; font-size:19px;}
+  .prereq p{margin:6px 0; font-size:14.5px; color:#5A4A2E; line-height:1.55;}
+  .prereq .pr-soft{color:#7A6A48;}
+  .prereq .pr-how{margin-top:12px; background:#fff; border:1px dashed var(--gold); border-radius:10px;
+    padding:10px 12px; font-size:14px; font-weight:700; color:var(--ink);}
+  .mission{display:inline-block; text-align:left; background:var(--card2); border:1px solid var(--line);
+    border-radius:16px; padding:18px 22px; box-shadow:0 4px 18px var(--shadow); margin-bottom:20px;}
+  .mission h3{margin:0 0 10px; font-size:15px; color:var(--accent);}
+  .mission ul{margin:0; padding-left:20px;} .mission li{margin:5px 0;}
+  .route{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:6px 0 24px;}
+  .route .r{background:var(--card2);border:1px solid var(--line);border-radius:99px;padding:7px 14px;font-size:13px;font-weight:700;}
+  .route .r em{font-style:normal; color:var(--muted);}
+  .nav{position:fixed; left:0; right:0; bottom:0; z-index:20; background:#FFFDF7f2; backdrop-filter:blur(6px);
+    border-top:1px solid var(--line); box-shadow:0 -2px 14px var(--shadow);}
+  .nav-in{max-width:820px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; gap:12px;}
+  .nav .now{flex:1; text-align:center; font-weight:800; color:var(--muted); font-size:13px;}
+  .btn{border:none; border-radius:12px; padding:13px 22px; font-weight:800; font-size:15px; cursor:pointer; font-family:inherit; transition:.15s;}
+  .btn.prev{background:#F3ECD8; color:var(--muted);}
+  .btn.next{background:var(--accent); color:#fff; box-shadow:0 4px 14px var(--shadow);}
+  .btn.next:hover{filter:brightness(1.06);}
+  .btn:disabled{opacity:.4; cursor:default; box-shadow:none;}
+  .btn.big{font-size:17px; padding:15px 30px;}
+  #toast{position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center; pointer-events:none;}
+  #toast.go{display:flex;}
+  #toast .card{background:var(--accent); color:#fff; padding:24px 42px; border-radius:22px; text-align:center;
+    box-shadow:0 20px 60px rgba(120,80,10,.35); animation:lvup 1.3s ease forwards;}
+  #toast .big{font-size:34px; font-weight:900; letter-spacing:1px;}
+  #toast .sm{font-size:15px; opacity:.92; margin-top:2px;}
+  @keyframes lvup{0%{transform:scale(.6) translateY(10px); opacity:0;}
+    18%{transform:scale(1.06); opacity:1;} 30%{transform:scale(1);}
+    82%{opacity:1; transform:scale(1);} 100%{opacity:0; transform:scale(.96) translateY(-8px);}}
+  @media (max-width:520px){
+    h1.title{font-size:25px;} .cover h1{font-size:26px;}
+    .step .lbl{display:none;} .btn{padding:12px 16px; font-size:14px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div class="brand"><span class="dot"></span> 🏘️ 우리 동네 인구 구조 앱 만들기 · 바이브코딩 퀘스트</div>
+    <div class="stepper" id="stepper">
+      <div class="step" data-go="1"><span class="em">🚀</span><span class="pill"></span><span class="lbl">배포</span></div>
+      <div class="step" data-go="2"><span class="em">📊</span><span class="pill"></span><span class="lbl">데이터</span></div>
+      <div class="step" data-go="3"><span class="em">📈</span><span class="pill"></span><span class="lbl">시각화</span></div>
+      <div class="step" data-go="4"><span class="em">✨</span><span class="pill"></span><span class="lbl">대시보드</span></div>
+      <div class="step" data-go="5"><span class="em">🏆</span><span class="pill"></span><span class="lbl">클리어</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ═══ 표지 ═══ -->
+<section class="page show cover" id="p0">
+  <div class="emoji">🏘️📊</div>
+  <h1>우리 동네 인구 구조 앱<br>직접 만들어 인터넷에 올리기</h1>
+  <p class="sub">50분 바이브코딩 워크샵 · <b>코딩 몰라도 됩니다</b></p>
+
+  <div class="prereq">
+    <span class="pr-badge">🔑 오늘 준비물 딱 하나</span>
+    <h3>깃허브(GitHub) 계정</h3>
+    <p><b>가입 + 이메일 인증까지</b> 미리 마치고 오셨다면 👏 오늘 직접 <b>'만드는 분'</b>이 되십니다.</p>
+    <p class="pr-soft">아직이시라면? 편하게 <b>'구경'</b>만 하셔도 정말 괜찮아요 😊 그래도 <b>딱 5분</b>이면 되니, <b>지금 이 순간</b> 슬쩍 만들어 두시면 함께 완성할 수 있어요!</p>
+    <div class="pr-how">📌 지금 가입 &nbsp;→&nbsp; <b>github.com</b> 접속 → <span class="kbd">Sign up</span> → 메일로 온 인증번호 입력 → 끝!</div>
+  </div>
+
+  <div class="mission">
+    <h3>🎯 오늘의 미션</h3>
+    <ul>
+      <li><b>말로 설명 → AI가 코드 완성 → 깃허브에 배포</b></li>
+      <li>완성하면 <b>우리 동네 인구를 보여주는 나만의 웹</b>이 생겨요<br>(예: <code>내아이디.github.io/population</code>)</li>
+    </ul>
+  </div>
+
+  <div class="route">
+    <span class="r">🚀 LV1 <em>배포</em></span>
+    <span class="r">📊 LV2 <em>데이터</em></span>
+    <span class="r">📈 LV3 <em>시각화</em></span>
+    <span class="r">✨ LV4 <em>대시보드</em></span>
+    <span class="r">🏆 클리어</span>
+  </div>
+
+  <button class="btn next big" onclick="go(1)">모험 시작하기 ▶</button>
+</section>
+
+<!-- ═══ LEVEL 1 : 배포 ═══ -->
+<section class="page" id="p1">
+  <span class="lvtag">🚀 LEVEL 1 · 배포</span><span class="mins">⏱ 약 12분</span>
+  <h1 class="title">인터넷에 내 주소를 만든다</h1>
+  <p class="lead">아직 데이터도 그래프도 없어요. 먼저 <b>빈 앱을 인터넷에 올려</b> 내 주소부터 확보합니다. 배포는 오늘 딱 한 번만!</p>
+  <div class="power"><small>이 레벨에서 얻는 능력</small>🌐 세상 누구나 접속할 수 있는 <b>나만의 웹사이트 주소</b></div>
+
+  <ol class="steps">
+    <li>깃허브 로그인 후 오른쪽 위 <span class="kbd">+</span> ▸ <span class="path">New repository</span></li>
+    <li>이름에 <span class="kbd">population</span> 입력 · <b>Public</b> 선택 · <b>Add a README file</b> 체크 ▸ <span class="path">Create repository</span></li>
+    <li><span class="path">Add file</span> ▸ <span class="path">Create new file</span> ▸ 파일 이름을 <span class="kbd">index.html</span> 로</li>
+    <li>아래 코드를 <b>복사</b>해서 붙여넣기 👇</li>
+  </ol>
+
+  <div class="cbox">
+    <div class="cbox-head"><span class="cbox-label">📄 index.html (첫 배포용)</span><button class="copy">복사</button></div>
+    <textarea class="code" readonly rows="10">&lt;!DOCTYPE html&gt;
+&lt;html lang="ko"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;우리 동네 인구 구조&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;🏘️ 우리 동네 인구 구조&lt;/h1&gt;
+  &lt;p&gt;곧 우리 동네 인구 데이터가 여기에 나타납니다! (레벨 2에서 만들어요)&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</textarea>
+  </div>
+
+  <ol class="steps" start="5" style="counter-reset:s 4;">
+    <li>초록색 <span class="path">Commit changes</span> 버튼 클릭</li>
+    <li><span class="path">Settings</span> ▸ 왼쪽 <span class="path">Pages</span> ▸ Branch를 <span class="kbd">main</span> 으로 ▸ <span class="path">Save</span></li>
+    <li>1~2분 뒤, 위쪽에 뜬 <b>내 주소</b>(<code>내아이디.github.io/population</code>)를 새 탭에서 열기</li>
+  </ol>
+
+  <div class="box check"><b>✅ 이렇게 되면 성공!</b>
+    화면에 <b>"🏘️ 우리 동네 인구 구조"</b> 글자가 <b>인터넷 주소</b>로 보이면 배포 성공. 아직 밋밋해도 정상이에요.</div>
+  <div class="box tipbox"><b>💡 팁 · 반영에 시간이 걸려요</b>
+    <b>첫 배포</b>는 1~2분(가끔 더) 걸릴 수 있어요. 안 뜨면 잠깐 기다렸다 새로고침!<br>
+    이후 <b>수정</b>은 보통 수십 초 안에 반영됩니다. 그래도 안 바뀌면 <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">R</span>(강력 새로고침). 배포는 지금 딱 한 번, 다음부터는 <b>index.html만 고쳐 Commit</b>하면 같은 주소에 자동 반영돼요.</div>
+</section>
+
+<!-- ═══ LEVEL 2 : 데이터 ═══ -->
+<section class="page" id="p2">
+  <span class="lvtag">📊 LEVEL 2 · 데이터</span><span class="mins">⏱ 약 12분</span>
+  <h1 class="title">우리 동네 인구 데이터를 불러온다</h1>
+  <p class="lead">깃허브에 올라가 있는 <b>전국 인구 데이터(CSV) 주소</b>를 AI에게 건네주면, 그 데이터를 불러와 지역별로 보여주는 <b>코드가 알아서 완성</b>됩니다.</p>
+  <div class="power"><small>이 레벨에서 얻는 능력</small>📊 깃허브에 저장된 <b>공공데이터(CSV)</b>를 내 앱으로 불러오기</div>
+
+  <div class="tabs" data-tabs>
+    <button class="tab active" data-t="ai">🤖 AI로 만들기 (추천!)</button>
+    <button class="tab" data-t="code">📋 막히면 완성 코드</button>
+  </div>
+
+  <div class="pane" data-p="ai">
+    <ol class="steps">
+      <li>아래 <b>인구 데이터 주소를 복사</b>하세요 (수정할 것 없이 그대로). <span class="hl">새 탭에서 열어보면 진짜 인구 CSV가 보여요!</span> 👇</li>
+    </ol>
+    <div class="cbox">
+      <div class="cbox-head"><span class="cbox-label">🔗 인구 데이터 주소 (그대로 복사)</span><button class="copy">복사</button></div>
+      <input class="urlbox" readonly value="https://greatsong.github.io/modeudata-population-web/population_2026_05.csv">
+    </div>
+    <ol class="steps" start="2" style="counter-reset:s 1;">
+      <li>아래 <b>프롬프트를 복사</b>해 AI(클로드·챗지피티)에 붙여넣고, <b>맨 끝에 방금 복사한 데이터 주소를 붙여넣어</b> 전송 👇</li>
+    </ol>
+    <div class="cbox">
+      <div class="cbox-head"><span class="cbox-label">🤖 AI 프롬프트 (붙여넣고 끝에 데이터 주소 추가)</span><button class="copy">복사</button></div>
+      <textarea class="prompt" readonly style="height:240px">아래 [데이터 주소]는 우리나라 행정구역별·연령별·성별 인구 CSV야. 이 데이터를 불러와서, 지역을 검색·선택하면 그 지역의 총인구와 남/여 인구를 보여주는 웹페이지를 index.html 파일 하나로 만들어줘. 설명은 짧게, 전체 코드를 코드블록으로 한 번에 줘.
+
+■ CSV 형식
+- 첫 줄은 헤더: 행정구역,코드,남자_0세,여자_0세,…,남자_100세이상,여자_100세이상 (UTF-8 BOM 있음, 콤마 구분)
+- 한 줄이 한 지역. 지역명(첫 칸)으로 찾게 해줘. 지역이 3,900여 개니 datalist로 검색되게.
+
+■ 규칙
+- 외부 라이브러리 없이 순수 HTML + JavaScript 한 파일. fetch로 직접 불러와 파싱.
+- 숫자에 천단위 콤마 표시.
+
+■ 데이터 주소 (아래에 붙여넣기 👇)
+</textarea>
+    </div>
+    <ol class="steps" start="3" style="counter-reset:s 2;">
+      <li>AI가 준 <b>index.html 코드 전체를 복사</b> → 깃허브 <span class="kbd">index.html</span> 편집(연필 ✏️) → <b>기존 내용 다 지우고</b> 붙여넣기 → <span class="path">Commit changes</span></li>
+      <li>내 주소 탭으로 가서 <b>새로고침</b>(<span class="kbd">F5</span>)</li>
+    </ol>
+  </div>
+
+  <div class="pane" data-p="code" hidden>
+    <p class="lead" style="font-size:14.5px">AI 없이 바로 쓰는 완성본입니다. 그대로 붙여넣어도 되고, <b>2번째 줄 기본지역만</b> 우리 동네로 바꿔도 돼요. 깃허브 <code>index.html</code>에 통째로 붙여넣으세요.</p>
+    <div class="cbox">
+      <div class="cbox-head"><span class="cbox-label">📄 완성 코드 · 데이터만 (기본지역만 수정 가능)</span><button class="copy">복사</button></div>
+      <textarea class="code" readonly>&lt;!DOCTYPE html&gt;
+&lt;html lang="ko"&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+&lt;title&gt;우리 동네 인구&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;우리 동네 인구&lt;/h1&gt;
+  &lt;input id="q" list="regions" placeholder="동네 이름 입력 (예: 서울특별시 종로구)" style="width:100%;max-width:360px;padding:8px;font-size:16px;"&gt;
+  &lt;datalist id="regions"&gt;&lt;/datalist&gt;
+  &lt;div id="app"&gt;데이터 불러오는 중…&lt;/div&gt;
+
+&lt;script&gt;
+const 기본지역 = "서울특별시 종로구"; // ← 보고 싶은 지역으로 바꿔도 돼요
+const DATA_URL = "https://greatsong.github.io/modeudata-population-web/population_2026_05.csv";
+
+let HEADER = [], INDEX = {};
+const num = s =&gt; parseInt(s,10) || 0;
+
+// 한 지역의 남/여/총 인구 합계
+function sums(cells){
+  let male=0, female=0;
+  for(let i=2;i&lt;HEADER.length;i++){
+    const v = num(cells[i]);
+    if(HEADER[i].startsWith('남자')) male+=v; else female+=v;
+  }
+  return { male, female, total: male+female };
+}
+
+function show(name){
+  const cells = INDEX[name];
+  if(!cells){ document.getElementById('app').textContent = '그 지역을 못 찾았어요. 목록에서 골라보세요.'; return; }
+  const {male,female,total} = sums(cells);
+  document.getElementById('app').innerHTML =
+    `&lt;h2&gt;${name}&lt;/h2&gt;
+     &lt;p&gt;총인구: &lt;b&gt;${total.toLocaleString()}&lt;/b&gt;명&lt;/p&gt;
+     &lt;p&gt;남자 ${male.toLocaleString()}명 · 여자 ${female.toLocaleString()}명&lt;/p&gt;`;
+}
+
+(async ()=&gt;{
+  const text = await (await fetch(DATA_URL)).text();
+  const lines = text.trim().split(/\r?\n/);
+  HEADER = lines[0].replace(/^﻿/,'').split(','); // 첫 줄은 제목(BOM 제거)
+  const dl = document.getElementById('regions');
+  lines.slice(1).forEach(line=&gt;{
+    const cells = line.split(',');
+    INDEX[cells[0]] = cells;                 // 지역명으로 찾을 수 있게 저장
+    const o = document.createElement('option'); o.value = cells[0]; dl.appendChild(o);
+  });
+  const q = document.getElementById('q');
+  q.value = 기본지역;
+  q.addEventListener('input', ()=&gt;{ if(INDEX[q.value]) show(q.value); });
+  show(기본지역);
+})().catch(e=&gt;document.getElementById('app').textContent = '⚠️ ' + e.message);
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</textarea>
+    </div>
+  </div>
+
+  <div class="box check"><b>✅ 이렇게 되면 성공!</b>
+    검색창에 지역을 입력(예: <b>서울특별시 종로구</b>)하면 그 지역의 <b>총인구·남자·여자 수</b>가 나타납니다.</div>
+  <div class="box tipbox"><b>💡 왜 신기하냐면</b>
+    이건 <b>전국 3,900여 개 모든 동네</b>의 진짜 인구예요. 우리 동네, 내 고향, 근무하는 학교 동네까지 다 찾아볼 수 있어요!</div>
+</section>
+
+<!-- ═══ LEVEL 3 : 시각화 ═══ -->
+<section class="page" id="p3">
+  <span class="lvtag">📈 LEVEL 3 · 시각화</span><span class="mins">⏱ 약 10분</span>
+  <h1 class="title">숫자를 '한눈에 보이는' 그래프로</h1>
+  <p class="lead">표 속 숫자만으론 감이 안 오죠. <b>인구 피라미드</b>로 남녀·연령 구조를 한눈에 보이게 만듭니다.</p>
+  <div class="power"><small>이 레벨에서 얻는 능력</small>📈 데이터를 <b>그래프로 시각화</b>하기</div>
+
+  <div class="tabs" data-tabs>
+    <button class="tab active" data-t="ai">🤖 AI로 만들기 (추천!)</button>
+    <button class="tab" data-t="code">📋 막히면 완성 코드</button>
+  </div>
+
+  <div class="pane" data-p="ai">
+    <ol class="steps">
+      <li><b>레벨 2에서 대화하던 그 AI 창</b>에 아래 프롬프트를 이어서 보내기 👇</li>
+    </ol>
+    <div class="cbox">
+      <div class="cbox-head"><span class="cbox-label">🤖 AI 프롬프트 (이어서 대화)</span><button class="copy">복사</button></div>
+      <textarea class="prompt" readonly style="height:180px">방금 만든 인구 페이지에 "인구 피라미드"를 추가해줘. 전체 index.html 코드를 다시 통째로 줘.
+
+- 나이를 10세 단위(0-9, 10-19, …, 90+)로 묶어서, 남자는 왼쪽·여자는 오른쪽 가로 막대로 그려줘.
+- 외부 라이브러리 없이 CSS 막대로. 고령이 위, 유소년이 아래.
+- 남자/여자 색을 다르게 하고 범례도 넣어줘.</textarea>
+    </div>
+    <ol class="steps" start="2" style="counter-reset:s 1;">
+      <li>새 코드를 깃허브 <span class="kbd">index.html</span>에 <b>통째로 교체</b> → <span class="path">Commit</span> → <b>새로고침</b></li>
+    </ol>
+  </div>
+
+  <div class="pane" data-p="code" hidden>
+    <div class="cbox">
+      <div class="cbox-head"><span class="cbox-label">📄 완성 코드 · 인구 피라미드</span><button class="copy">복사</button></div>
+      <textarea class="code" readonly>&lt;!DOCTYPE html&gt;
+&lt;html lang="ko"&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+&lt;title&gt;우리 동네 인구 피라미드&lt;/title&gt;
+&lt;style&gt;
+  body{font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;
+       max-width:520px;margin:0 auto;padding:20px;color:#222;}
+  h1{font-size:20px;} h2{font-size:17px;margin:.6rem 0 .2rem;}
+  input{width:100%;font-size:16px;padding:9px;border:1px solid #ddd;border-radius:8px;margin-bottom:14px;}
+  .legend{font-size:13px;color:#666;margin-bottom:8px;}
+  .legend b.m{color:#4C8DF6;} .legend b.f{color:#F4789B;}
+  .py-row{display:flex;align-items:center;gap:6px;margin:3px 0;}
+  .side{flex:1;display:flex;} .side.m{justify-content:flex-end;}
+  .bar{height:16px;border-radius:4px;}
+  .bar.m{background:#4C8DF6;} .bar.f{background:#F4789B;}
+  .lbl{width:52px;text-align:center;color:#666;font-size:12px;font-variant-numeric:tabular-nums;}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;🏘️ 우리 동네 인구 피라미드&lt;/h1&gt;
+  &lt;input id="q" list="regions" placeholder="동네 이름 입력 (예: 서울특별시 종로구)"&gt;
+  &lt;datalist id="regions"&gt;&lt;/datalist&gt;
+  &lt;div id="app"&gt;데이터 불러오는 중…&lt;/div&gt;
+
+&lt;script&gt;
+const 기본지역 = "서울특별시 종로구"; // ← 보고 싶은 지역으로 바꿔도 돼요
+const DATA_URL = "https://greatsong.github.io/modeudata-population-web/population_2026_05.csv";
+
+let HEADER = [], INDEX = {};
+const num = s =&gt; parseInt(s,10) || 0;
+const BANDS = [[0,9],[10,19],[20,29],[30,39],[40,49],[50,59],[60,69],[70,79],[80,89],[90,150]];
+
+// 연령별(0~100세) 남/여 배열 만들기
+function ageArrays(cells){
+  const male = new Array(101).fill(0), female = new Array(101).fill(0);
+  for(let i=2;i&lt;HEADER.length;i++){
+    const h = HEADER[i]; const m = h.match(/_(\d+)세/); if(!m) continue;
+    const age = Math.min(100, +m[1]); const v = num(cells[i]);
+    if(h.startsWith('남자')) male[age]+=v; else female[age]+=v;
+  }
+  return { male, female };
+}
+const rangeSum = (a,lo,hi)=&gt;{ let s=0; for(let i=lo;i&lt;=hi;i++) s+=a[i]; return s; };
+const toBands = a =&gt; BANDS.map(([lo,hi])=&gt;rangeSum(a,lo,Math.min(hi,100)));
+
+function show(name){
+  const cells = INDEX[name]; if(!cells) return;
+  const {male,female} = ageArrays(cells);
+  const mB = toBands(male), fB = toBands(female);
+  const max = Math.max(...mB, ...fB, 1);
+  const total = rangeSum(male,0,100) + rangeSum(female,0,100);
+
+  let html = `&lt;h2&gt;${name}&lt;/h2&gt;
+    &lt;p&gt;총인구 &lt;b&gt;${total.toLocaleString()}&lt;/b&gt;명&lt;/p&gt;
+    &lt;div class="legend"&gt;&lt;b class="m"&gt;■ 남자&lt;/b&gt; &amp;nbsp; &lt;b class="f"&gt;■ 여자&lt;/b&gt;&lt;/div&gt;`;
+  for(let i=BANDS.length-1;i&gt;=0;i--){           // 고령이 위, 유소년이 아래
+    const b = BANDS[i], lbl = b[1]&gt;=150 ? `${b[0]}+` : `${b[0]}-${b[1]}`;
+    html += `&lt;div class="py-row"&gt;
+      &lt;div class="side m"&gt;&lt;div class="bar m" style="width:${mB[i]/max*100}%"&gt;&lt;/div&gt;&lt;/div&gt;
+      &lt;div class="lbl"&gt;${lbl}&lt;/div&gt;
+      &lt;div class="side f"&gt;&lt;div class="bar f" style="width:${fB[i]/max*100}%"&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;/div&gt;`;
+  }
+  document.getElementById('app').innerHTML = html;
+}
+
+(async ()=&gt;{
+  const text = await (await fetch(DATA_URL)).text();
+  const lines = text.trim().split(/\r?\n/);
+  HEADER = lines[0].replace(/^﻿/,'').split(',');
+  const dl = document.getElementById('regions');
+  lines.slice(1).forEach(line=&gt;{
+    const cells = line.split(','); INDEX[cells[0]] = cells;
+    const o = document.createElement('option'); o.value = cells[0]; dl.appendChild(o);
+  });
+  const q = document.getElementById('q');
+  q.value = 기본지역;
+  q.addEventListener('input', ()=&gt;{ if(INDEX[q.value]) show(q.value); });
+  show(기본지역);
+})().catch(e=&gt;document.getElementById('app').textContent = '⚠️ ' + e.message);
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</textarea>
+    </div>
+  </div>
+
+  <div class="box check"><b>✅ 이렇게 되면 성공!</b>
+    남자(왼쪽)·여자(오른쪽)가 연령대별로 뻗어나가는 <b>인구 피라미드</b>가 그려집니다.</div>
+  <div class="box think"><b>🤔 이렇게 해보세요</b>
+    검색창에 <b>다른 동네</b>를 넣어 비교해보세요. 신도시와 시골, 피라미드 모양이 완전히 다를 거예요!</div>
+</section>
+
+<!-- ═══ LEVEL 4 : 대시보드 ═══ -->
+<section class="page" id="p4">
+  <span class="lvtag">✨ LEVEL 4 · 대시보드</span><span class="mins">⏱ 약 10분</span>
+  <h1 class="title">지표 카드까지 갖춘 '진짜 대시보드'</h1>
+  <p class="lead">밝은 톤과 <b>지표 카드(고령화율·유소년 비율 등)</b>를 더해 뉴스에 나올 법한 대시보드로 끌어올립니다. 여기서부터가 진짜 <b>바이브코딩</b>이에요.</p>
+  <div class="power"><small>이 레벨에서 얻는 능력</small>✨ 말 한마디로 <b>데이터 대시보드를 디자인</b></div>
+
+  <div class="tabs" data-tabs>
+    <button class="tab active" data-t="ai">🤖 AI로 만들기 (추천!)</button>
+    <button class="tab" data-t="code">📋 막히면 완성 코드</button>
+  </div>
+
+  <div class="pane" data-p="ai">
+    <ol class="steps">
+      <li>같은 AI 창에 아래 프롬프트를 이어서 보내기 → 코드 교체 → <span class="path">Commit</span> → 새로고침 👇</li>
+    </ol>
+    <div class="cbox">
+      <div class="cbox-head"><span class="cbox-label">🤖 AI 프롬프트 (밝은 대시보드)</span><button class="copy">복사</button></div>
+      <textarea class="prompt" readonly style="height:250px">이제 대시보드처럼 밝고 예쁘게 업그레이드해줘. 전체 index.html 코드를 다시 통째로 줘. 기능(지역 검색 + 인구 피라미드)은 그대로 유지.
+
+- 밝은 크림/골드 톤 배경, 둥근 모서리, 부드러운 그림자.
+- 상단에 지표 카드 4개: 총인구 / 남·여 / 고령화율(65세 이상 비율) / 유소년(0-14세 비율).
+- 인구 피라미드도 예쁘게 다듬어줘.
+- 맨 위에 테마 전환 버튼 3개(🍞크림 / 🌿민트 / 🍓베리) — CSS 변수로 색만 바꾸는 방식.
+- 휴대폰에서도 예쁘게 보이도록 반응형으로.</textarea>
+    </div>
+    <div class="box tipbox"><b>🎨 진짜 바이브코딩은 여기서부터</b>
+      프롬프트에 한 줄씩 더 시켜보세요 — <b>"내 고향을 기본값으로"</b>, <b>"고령화율이 20% 넘으면 빨갛게"</b>, <b>"두 지역을 나란히 비교"</b>. 말하는 대로 바뀝니다.</div>
+  </div>
+
+  <div class="pane" data-p="code" hidden>
+    <div class="cbox">
+      <div class="cbox-head"><span class="cbox-label">📄 완성 코드 · 밝은 대시보드 (테마 전환 포함)</span><button class="copy">복사</button></div>
+      <textarea class="code" readonly>&lt;!DOCTYPE html&gt;
+&lt;html lang="ko"&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+&lt;title&gt;우리 동네 인구 구조 🏘️&lt;/title&gt;
+&lt;style&gt;
+  :root{
+    --bg:#FFFDF7; --card:#FFF6E0; --border:#F0E2BC;
+    --accent:#E8930C; --gold:#F4B400; --text:#3A2E1A; --muted:#9A8B6A;
+    --shadow:rgba(180,140,20,.18); --male:#4C8DF6; --female:#F4789B;
+  }
+  body[data-theme="mint"]{--bg:#F4FFFB;--card:#E7FBF3;--border:#C7F0E0;--accent:#0EA371;--gold:#34D399;--text:#0F3D2E;--muted:#6FA992;--shadow:rgba(16,185,129,.18);}
+  body[data-theme="berry"]{--bg:#FFF7FA;--card:#FFE9F1;--border:#FBD5E5;--accent:#E23C86;--gold:#F9A8D4;--text:#4A1D33;--muted:#B98098;--shadow:rgba(236,72,153,.18);}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);transition:background .3s;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;}
+  .wrap{max-width:560px;margin:0 auto;padding:24px 18px 48px;}
+  .themes{display:flex;gap:6px;justify-content:flex-end;margin-bottom:8px;}
+  .themes button{border:1px solid var(--border);background:#fff;color:var(--text);border-radius:99px;
+    padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .themes button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em;margin:.1rem 0;}
+  h1 .a{color:var(--accent);}
+  .under{width:60px;height:4px;border-radius:99px;margin:.4rem 0 .6rem;
+    background:linear-gradient(90deg,var(--gold),var(--accent));}
+  input#q{width:100%;font-size:1rem;padding:.6rem .7rem;border:1px solid var(--border);
+    border-radius:.7rem;background:#fff;color:var(--text);margin-bottom:14px;}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;
+    box-shadow:0 1px 4px var(--shadow);}
+  .card .k{font-size:.74rem;color:var(--muted);font-weight:700;}
+  .card .v{font-size:1.15rem;font-weight:800;color:var(--accent);margin-top:2px;}
+  .legend{font-size:.82rem;color:var(--muted);margin-bottom:8px;}
+  .legend b.m{color:var(--male);} .legend b.f{color:var(--female);}
+  .py-row{display:flex;align-items:center;gap:6px;margin:3px 0;}
+  .side{flex:1;display:flex;} .side.m{justify-content:flex-end;}
+  .bar{height:17px;border-radius:5px;transition:width .4s ease;}
+  .bar.m{background:var(--male);} .bar.f{background:var(--female);}
+  .lbl{width:52px;text-align:center;color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums;}
+  .foot{color:var(--muted);font-size:.8rem;margin-top:18px;}
+  @media(max-width:520px){.cards{grid-template-columns:repeat(2,1fr);}}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="wrap"&gt;
+    &lt;div class="themes" id="themes"&gt;
+      &lt;button data-th="" class="on"&gt;🍞 크림&lt;/button&gt;
+      &lt;button data-th="mint"&gt;🌿 민트&lt;/button&gt;
+      &lt;button data-th="berry"&gt;🍓 베리&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;h1&gt;🏘️ 우리 동네 &lt;span class="a"&gt;인구 구조&lt;/span&gt;&lt;/h1&gt;
+    &lt;div class="under"&gt;&lt;/div&gt;
+    &lt;input id="q" list="regions" placeholder="동네 이름 입력 (예: 서울특별시 종로구)"&gt;
+    &lt;datalist id="regions"&gt;&lt;/datalist&gt;
+    &lt;div class="cards" id="cards"&gt;&lt;/div&gt;
+    &lt;div class="legend"&gt;연령대별 인구 · &lt;b class="m"&gt;■ 남자&lt;/b&gt; &lt;b class="f"&gt;■ 여자&lt;/b&gt;&lt;/div&gt;
+    &lt;div id="py"&gt;&lt;/div&gt;
+    &lt;p class="foot"&gt;데이터: 행정안전부 주민등록 인구(2026.05)&lt;/p&gt;
+  &lt;/div&gt;
+
+&lt;script&gt;
+const 기본지역 = "서울특별시 종로구"; // ← 보고 싶은 지역으로 바꿔도 돼요
+const DATA_URL = "https://greatsong.github.io/modeudata-population-web/population_2026_05.csv";
+
+let HEADER = [], INDEX = {};
+const num = s =&gt; parseInt(s,10) || 0;
+const BANDS = [[0,9],[10,19],[20,29],[30,39],[40,49],[50,59],[60,69],[70,79],[80,89],[90,150]];
+
+function ageArrays(cells){
+  const male = new Array(101).fill(0), female = new Array(101).fill(0);
+  for(let i=2;i&lt;HEADER.length;i++){
+    const h = HEADER[i]; const m = h.match(/_(\d+)세/); if(!m) continue;
+    const age = Math.min(100, +m[1]); const v = num(cells[i]);
+    if(h.startsWith('남자')) male[age]+=v; else female[age]+=v;
+  }
+  return { male, female };
+}
+const rangeSum = (a,lo,hi)=&gt;{ let s=0; for(let i=lo;i&lt;=hi;i++) s+=a[i]; return s; };
+const toBands = a =&gt; BANDS.map(([lo,hi])=&gt;rangeSum(a,lo,Math.min(hi,100)));
+
+function show(name){
+  const cells = INDEX[name]; if(!cells) return;
+  const {male,female} = ageArrays(cells);
+  const mT = rangeSum(male,0,100), fT = rangeSum(female,0,100), total = mT+fT;
+  const old = rangeSum(male,65,100) + rangeSum(female,65,100);
+  const young = rangeSum(male,0,14) + rangeSum(female,0,14);
+  const pct = n =&gt; total ? (n/total*100).toFixed(1)+'%' : '-';
+
+  document.getElementById('cards').innerHTML = `
+    &lt;div class="card"&gt;&lt;div class="k"&gt;총인구&lt;/div&gt;&lt;div class="v"&gt;${total.toLocaleString()}&lt;/div&gt;&lt;/div&gt;
+    &lt;div class="card"&gt;&lt;div class="k"&gt;남 / 여&lt;/div&gt;&lt;div class="v" style="font-size:.92rem"&gt;${mT.toLocaleString()}&lt;br&gt;${fT.toLocaleString()}&lt;/div&gt;&lt;/div&gt;
+    &lt;div class="card"&gt;&lt;div class="k"&gt;고령화율 65+&lt;/div&gt;&lt;div class="v"&gt;${pct(old)}&lt;/div&gt;&lt;/div&gt;
+    &lt;div class="card"&gt;&lt;div class="k"&gt;유소년 0-14&lt;/div&gt;&lt;div class="v"&gt;${pct(young)}&lt;/div&gt;&lt;/div&gt;`;
+
+  const mB = toBands(male), fB = toBands(female); const max = Math.max(...mB, ...fB, 1);
+  let html = '';
+  for(let i=BANDS.length-1;i&gt;=0;i--){
+    const b = BANDS[i], lbl = b[1]&gt;=150 ? `${b[0]}+` : `${b[0]}-${b[1]}`;
+    html += `&lt;div class="py-row"&gt;
+      &lt;div class="side m"&gt;&lt;div class="bar m" style="width:${mB[i]/max*100}%"&gt;&lt;/div&gt;&lt;/div&gt;
+      &lt;div class="lbl"&gt;${lbl}&lt;/div&gt;
+      &lt;div class="side f"&gt;&lt;div class="bar f" style="width:${fB[i]/max*100}%"&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;/div&gt;`;
+  }
+  document.getElementById('py').innerHTML = html;
+}
+
+document.getElementById('themes').addEventListener('click', e=&gt;{
+  const b = e.target.closest('button'); if(!b) return;
+  document.body.dataset.theme = b.dataset.th; localStorage.setItem('pop_theme', b.dataset.th);
+  document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on', x===b));
+});
+const st = localStorage.getItem('pop_theme') || '';
+document.body.dataset.theme = st;
+document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on', x.dataset.th===st));
+
+(async ()=&gt;{
+  const text = await (await fetch(DATA_URL)).text();
+  const lines = text.trim().split(/\r?\n/);
+  HEADER = lines[0].replace(/^﻿/,'').split(',');
+  const dl = document.getElementById('regions');
+  lines.slice(1).forEach(line=&gt;{
+    const cells = line.split(','); INDEX[cells[0]] = cells;
+    const o = document.createElement('option'); o.value = cells[0]; dl.appendChild(o);
+  });
+  const q = document.getElementById('q'); q.value = 기본지역;
+  q.addEventListener('input', ()=&gt;{ if(INDEX[q.value]) show(q.value); });
+  show(기본지역);
+})().catch(e=&gt;document.getElementById('cards').textContent = '⚠️ ' + e.message);
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</textarea>
+    </div>
+  </div>
+
+  <div class="box check"><b>✅ 이렇게 되면 성공!</b>
+    총인구·고령화율·유소년 <b>지표 카드</b> + 예쁜 피라미드 + <b>테마 전환</b>까지 갖춘 대시보드가 완성됩니다.</div>
+</section>
+
+<!-- ═══ CLEAR ═══ -->
+<section class="page cover" id="p5">
+  <div class="emoji">🏆🎉</div>
+  <h1 style="font-size:32px;margin:12px 0 4px;">미션 클리어!</h1>
+  <p class="sub">아이디어 → AI로 코드 → 깃허브 배포 → <b>진짜 인구 데이터 대시보드</b>까지 해냈습니다.</p>
+
+  <div class="mission">
+    <h3>🔎 이제 데이터가 말을 겁니다</h3>
+    <ul>
+      <li>고령화율이 가장 높은 동네는 어디일까?</li>
+      <li>유소년이 많은 <b>신도시</b>와 어르신이 많은 <b>시골</b>, 피라미드가 어떻게 다를까?</li>
+      <li>검색창에 여러 지역을 넣어 <b>직접 비교</b>해 보세요.</li>
+    </ul>
+  </div>
+
+  <div class="mission">
+    <h3>🧰 오늘 손에 넣은 것</h3>
+    <ul>
+      <li>① 깃허브의 <b>공공데이터(CSV)</b> 불러와 파싱하기</li>
+      <li>② 데이터를 <b>그래프(인구 피라미드)</b>로 시각화하기</li>
+      <li>③ <b>깃허브 페이지</b>로 세상에 배포하기</li>
+    </ul>
+  </div>
+
+  <div class="mission">
+    <h3>🚀 이제 바꿔보세요 (바이브코딩)</h3>
+    <ul>
+      <li>인구 → <b>다른 공공데이터</b>(대중교통·기온·상권·아파트 가격)로 바꿔보기</li>
+      <li>AI에게 <b>"이 데이터 주소로 똑같이 만들어줘"</b> 한마디면 끝!</li>
+      <li>완성한 <b>내 대시보드 주소를 동료에게 공유</b> 🎉</li>
+    </ul>
+  </div>
+
+  <button class="btn next big" onclick="go(0)">🔄 처음으로</button>
+</section>
+
+</main>
+
+<div class="nav">
+  <div class="nav-in">
+    <button class="btn prev" id="btnPrev" onclick="go(cur-1)">◀ 이전</button>
+    <div class="now" id="nowLabel">표지</div>
+    <button class="btn next" id="btnNext" onclick="go(cur+1)">다음 ▶</button>
+  </div>
+</div>
+
+<div id="toast"><div class="card"><div class="big">🎉 LEVEL UP!</div><div class="sm" id="toastSub"></div></div></div>
+
+<script>
+  const ACCENTS = ['#E8930C','#E8930C','#3E7BE0','#16A34A','#E23C86','#EAB308'];
+  const SOFT    = ['#FFF3DE','#FFF0D6','#EAF2FF','#E7F6ED','#FDE7F1','#FEF6DA'];
+  const LABELS  = ['표지','LEVEL 1 · 배포','LEVEL 2 · 데이터','LEVEL 3 · 시각화','LEVEL 4 · 대시보드','🏆 클리어'];
+  const UP_SUB  = ['','배포 준비 완료 🚀','데이터 소환! 📊','시각화 성공 📈','대시보드 완성 ✨','미션 클리어 🏆'];
+  const N = 6;
+  let cur = 0, maxReached = 0;
+
+  function go(i){
+    if(i<0 || i>N-1) return;
+    const leveledUp = i>cur && i>maxReached;
+    cur = i; maxReached = Math.max(maxReached, i);
+    document.querySelectorAll('.page').forEach((p,idx)=>p.classList.toggle('show', idx===i));
+    const root = document.documentElement.style;
+    root.setProperty('--accent', ACCENTS[i]);
+    root.setProperty('--accent-soft', SOFT[i]);
+    document.querySelectorAll('.step').forEach((s,idx)=>{
+      const lv = idx+1;
+      s.classList.toggle('active', lv===i);
+      s.classList.toggle('done', lv<i);
+    });
+    document.getElementById('nowLabel').textContent = LABELS[i];
+    document.getElementById('btnPrev').disabled = (i===0);
+    document.getElementById('btnNext').style.visibility = (i===N-1)?'hidden':'visible';
+    window.scrollTo({top:0, behavior:'smooth'});
+    if(leveledUp && i>=1) showToast(i);
+  }
+  function showToast(i){
+    const t = document.getElementById('toast');
+    document.getElementById('toastSub').textContent = UP_SUB[i];
+    t.classList.remove('go'); void t.offsetWidth; t.classList.add('go');
+    setTimeout(()=>t.classList.remove('go'), 1300);
+  }
+  document.getElementById('stepper').addEventListener('click', e=>{
+    const s = e.target.closest('.step'); if(s) go(+s.dataset.go);
+  });
+  document.querySelectorAll('[data-tabs]').forEach(bar=>{
+    bar.addEventListener('click', e=>{
+      const btn = e.target.closest('.tab'); if(!btn) return;
+      const wrap = bar.parentElement, t = btn.dataset.t;
+      bar.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b===btn));
+      wrap.querySelectorAll('.pane').forEach(p=>p.hidden = (p.dataset.p!==t));
+    });
+  });
+  document.addEventListener('click', e=>{
+    const btn = e.target.closest('.copy'); if(!btn) return;
+    const box = btn.closest('.cbox');
+    const field = box.querySelector('textarea, input');
+    field.removeAttribute('readonly'); field.focus(); field.select();
+    let ok=false; try{ ok=document.execCommand('copy'); }catch(_){}
+    if(!ok && navigator.clipboard){ navigator.clipboard.writeText(field.value).catch(()=>{}); }
+    field.setAttribute('readonly',''); window.getSelection().removeAllRanges();
+    const old = btn.textContent; btn.textContent='복사됨! ✓'; btn.classList.add('done');
+    setTimeout(()=>{ btn.textContent=old; btn.classList.remove('done'); }, 1400);
+  });
+  document.addEventListener('keydown', e=>{
+    if(e.target.matches('textarea,input')) return;
+    if(e.key==='ArrowRight') go(cur+1);
+    if(e.key==='ArrowLeft') go(cur-1);
+  });
+  go(0);
+</script>
+</body>
+</html>
