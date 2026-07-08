@@ -415,27 +415,22 @@ function ageBySex(cells){
 
 // Plotly 인구 피라미드 (5세 단위)
 function drawPyramid(m, f){
-  const labels=[], male=[], female=[];
-  for(let a=0;a&lt;=100;a+=5){
-    labels.push(a&gt;=100?'100+':a+'-'+(a+4));
-    let sm=0,sf=0; for(let i=a;i&lt;Math.min(a+5,101);i++){ sm+=m[i]; sf+=f[i]; }
-    male.push(sm); female.push(sf);
-  }
-  const mx=Math.max(...male,...female,1);
-  const step=Math.max(1000, Math.ceil(mx/4/1000)*1000), lim=Math.ceil(mx/step)*step;
+  const ages=Array.from({length:101},(_,i)=&gt;i);   // 0~100세(100+) 1세 단위
+  const mx=Math.max(...m,...f,1);
+  const step=Math.max(500, Math.ceil(mx/4/500)*500), lim=Math.ceil(mx/step)*step;
   const tv=[]; for(let v=-lim; v&lt;=lim; v+=step) tv.push(v);
   Plotly.react('py',[
-    {y:labels,x:male.map(v=&gt;-v),name:'남자',type:'bar',orientation:'h',marker:{color:'#4C8DF6'},
-     customdata:male,hovertemplate:'%{y}세 · 남 %{customdata:,}명&lt;extra&gt;&lt;/extra&gt;'},
-    {y:labels,x:female,name:'여자',type:'bar',orientation:'h',marker:{color:'#F4789B'},
+    {y:ages,x:m.map(v=&gt;-v),name:'남자',type:'bar',orientation:'h',marker:{color:'#4C8DF6'},
+     customdata:m,hovertemplate:'%{y}세 · 남 %{customdata:,}명&lt;extra&gt;&lt;/extra&gt;'},
+    {y:ages,x:f,name:'여자',type:'bar',orientation:'h',marker:{color:'#F4789B'},
      hovertemplate:'%{y}세 · 여 %{x:,}명&lt;extra&gt;&lt;/extra&gt;'}
   ],{
-    barmode:'relative', bargap:0.12, height:420, margin:{l:54,r:14,t:6,b:28},
+    barmode:'relative', bargap:0.15, height:560, margin:{l:46,r:14,t:6,b:28},
     paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
     font:{family:'-apple-system,"Malgun Gothic",sans-serif',size:12,color:'#333'},
-    legend:{orientation:'h',x:0.5,xanchor:'center',y:1.05},
+    legend:{orientation:'h',x:0.5,xanchor:'center',y:1.03},
     xaxis:{tickvals:tv,ticktext:tv.map(v=&gt;Math.abs(v).toLocaleString()),zeroline:true,zerolinecolor:'#ccc',gridcolor:'rgba(0,0,0,.06)',fixedrange:true},
-    yaxis:{fixedrange:true}
+    yaxis:{dtick:10,ticksuffix:'세',range:[-0.6,100.6],fixedrange:true}
   },{displayModeBar:false,responsive:true});
 }
 
@@ -579,27 +574,22 @@ function ageBySex(cells){
 const rsum = (a,lo,hi)=&gt;{ let s=0; for(let i=lo;i&lt;=hi;i++) s+=a[i]; return s; };
 
 function drawPyramid(m, f){
-  const labels=[], male=[], female=[];
-  for(let a=0;a&lt;=100;a+=5){
-    labels.push(a&gt;=100?'100+':a+'-'+(a+4));
-    let sm=0,sf=0; for(let i=a;i&lt;Math.min(a+5,101);i++){ sm+=m[i]; sf+=f[i]; }
-    male.push(sm); female.push(sf);
-  }
-  const mx=Math.max(...male,...female,1);
-  const step=Math.max(1000, Math.ceil(mx/4/1000)*1000), lim=Math.ceil(mx/step)*step;
+  const ages=Array.from({length:101},(_,i)=&gt;i);   // 0~100세(100+) 1세 단위
+  const mx=Math.max(...m,...f,1);
+  const step=Math.max(500, Math.ceil(mx/4/500)*500), lim=Math.ceil(mx/step)*step;
   const tv=[]; for(let v=-lim; v&lt;=lim; v+=step) tv.push(v);
   Plotly.react('py',[
-    {y:labels,x:male.map(v=&gt;-v),name:'남자',type:'bar',orientation:'h',marker:{color:'#4C8DF6'},
-     customdata:male,hovertemplate:'%{y}세 · 남 %{customdata:,}명&lt;extra&gt;&lt;/extra&gt;'},
-    {y:labels,x:female,name:'여자',type:'bar',orientation:'h',marker:{color:'#F4789B'},
+    {y:ages,x:m.map(v=&gt;-v),name:'남자',type:'bar',orientation:'h',marker:{color:'#4C8DF6'},
+     customdata:m,hovertemplate:'%{y}세 · 남 %{customdata:,}명&lt;extra&gt;&lt;/extra&gt;'},
+    {y:ages,x:f,name:'여자',type:'bar',orientation:'h',marker:{color:'#F4789B'},
      hovertemplate:'%{y}세 · 여 %{x:,}명&lt;extra&gt;&lt;/extra&gt;'}
   ],{
-    barmode:'relative', bargap:0.12, height:420, margin:{l:54,r:14,t:6,b:28},
+    barmode:'relative', bargap:0.15, height:560, margin:{l:46,r:14,t:6,b:28},
     paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
     font:{family:'-apple-system,"Malgun Gothic",sans-serif',size:12,color:'#333'},
-    legend:{orientation:'h',x:0.5,xanchor:'center',y:1.05},
+    legend:{orientation:'h',x:0.5,xanchor:'center',y:1.03},
     xaxis:{tickvals:tv,ticktext:tv.map(v=&gt;Math.abs(v).toLocaleString()),zeroline:true,zerolinecolor:'#ccc',gridcolor:'rgba(0,0,0,.06)',fixedrange:true},
-    yaxis:{fixedrange:true}
+    yaxis:{dtick:10,ticksuffix:'세',range:[-0.6,100.6],fixedrange:true}
   },{displayModeBar:false,responsive:true});
 }
 
