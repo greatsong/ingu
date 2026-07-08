@@ -85,6 +85,7 @@
   .check{background:var(--ok-soft); border:1px solid var(--ok-line);} .check b{color:var(--ok);}
   .tipbox{background:var(--tip-soft); border:1px solid var(--tip-line);} .tipbox b{color:#B45309;}
   .think{background:var(--think-soft); border:1px solid var(--think-line);} .think b{color:var(--think);}
+  .dare{background:linear-gradient(180deg,#FFFBEF,var(--card2)); border:1.5px solid var(--gold);} .dare b{color:var(--accent);}
   .cover{text-align:center; padding-top:14px;}
   .cover .emoji{font-size:60px; line-height:1;}
   .cover h1{font-size:33px; margin:14px 0 6px; letter-spacing:-.03em;}
@@ -233,11 +234,11 @@
   <div class="power"><small>이 레벨에서 얻는 능력</small>📊 깃허브에 저장된 <b>공공데이터(CSV)</b>를 내 앱으로 불러오기</div>
 
   <div class="tabs" data-tabs>
-    <button class="tab active" data-t="ai">🤖 AI로 만들기 (추천!)</button>
-    <button class="tab" data-t="code">📋 막히면 완성 코드</button>
+    <button class="tab active" data-t="code">📋 완성 코드로 · 다 함께</button>
+    <button class="tab" data-t="ai">🤖 AI로 직접 · 도전</button>
   </div>
 
-  <div class="pane" data-p="ai">
+  <div class="pane" data-p="ai" hidden>
     <ol class="steps">
       <li>아래 <b>인구 데이터 주소를 복사</b>하세요 (수정할 것 없이 그대로). <span class="hl">새 탭에서 열어보면 진짜 인구 CSV가 보여요!</span> 👇</li>
     </ol>
@@ -269,7 +270,7 @@
     </ol>
   </div>
 
-  <div class="pane" data-p="code" hidden>
+  <div class="pane" data-p="code">
     <p class="lead" style="font-size:14.5px">AI 없이 바로 쓰는 완성본입니다. 그대로 붙여넣어도 되고, <b>2번째 줄 기본지역만</b> 우리 동네로 바꿔도 돼요. 깃허브 <code>index.html</code>에 통째로 붙여넣으세요.</p>
     <div class="cbox">
       <div class="cbox-head"><span class="cbox-label">📄 완성 코드 · 데이터만 (기본지역만 수정 가능)</span><button class="copy">복사</button></div>
@@ -334,8 +335,12 @@ function show(name){
     </div>
   </div>
 
+  <div class="box dare"><b>⭐ 다 됐으면 — 딱 하나만 바꿔보기</b>
+    ① 완성 코드 <b>2번째 줄 <code>기본지역</code></b>을 우리 학교 동네로 바꿔 보세요.<br>
+    ② <b>도전(여유되면)</b>: 위 <span class="path">🤖 AI로 직접</span> 탭을 열어 AI에게 딱 하나만 — <b>"없는 지역을 넣으면 안내 문구를 띄워줘"</b><br>
+    🚧 <b>여기까지만!</b> 더 하고 싶은 건 마무리 후 자유시간에.</div>
   <div class="box check"><b>✅ 이렇게 되면 성공!</b>
-    검색창에 지역을 입력(예: <b>서울특별시 종로구</b>)하면 그 지역의 <b>총인구·남자·여자 수</b>가 나타납니다.</div>
+    검색창에 지역을 입력(예: <b>서울특별시 종로구</b>)하면 <b>총인구·남자·여자 수</b>가 나타납니다. <b>다 됐으면 손 들어 알려주세요 🙋</b></div>
   <div class="box tipbox"><b>💡 왜 신기하냐면</b>
     이건 <b>전국 3,900여 개 모든 동네</b>의 진짜 인구예요. 우리 동네, 내 고향, 근무하는 학교 동네까지 다 찾아볼 수 있어요!</div>
 </section>
@@ -348,11 +353,11 @@ function show(name){
   <div class="power"><small>이 레벨에서 얻는 능력</small>📈 데이터를 <b>그래프로 시각화</b>하기</div>
 
   <div class="tabs" data-tabs>
-    <button class="tab active" data-t="ai">🤖 AI로 만들기 (추천!)</button>
-    <button class="tab" data-t="code">📋 막히면 완성 코드</button>
+    <button class="tab active" data-t="code">📋 완성 코드로 · 다 함께</button>
+    <button class="tab" data-t="ai">🤖 AI로 직접 · 도전</button>
   </div>
 
-  <div class="pane" data-p="ai">
+  <div class="pane" data-p="ai" hidden>
     <ol class="steps">
       <li><b>레벨 2에서 대화하던 그 AI 창</b>에 아래 프롬프트를 이어서 보내기 👇</li>
     </ol>
@@ -369,7 +374,7 @@ function show(name){
     </ol>
   </div>
 
-  <div class="pane" data-p="code" hidden>
+  <div class="pane" data-p="code">
     <div class="cbox">
       <div class="cbox-head"><span class="cbox-label">📄 완성 코드 · 인구 피라미드</span><button class="copy">복사</button></div>
       <textarea class="code" readonly>&lt;!DOCTYPE html&gt;
@@ -462,8 +467,11 @@ function show(name){
     </div>
   </div>
 
+  <div class="box dare"><b>⭐ 다 됐으면 — 딱 하나만 바꿔보기</b>
+    <b>도전(여유되면)</b>: 위 <span class="path">🤖 AI로 직접</span> 탭을 열어 AI에게 딱 하나만 — <b>"막대 색을 바꿔줘"</b> 또는 <b>"나이를 10세 단위로 묶어줘"</b><br>
+    🚧 <b>색·묶음 정도만!</b> 준비되면 다음 레벨 ▶</div>
   <div class="box check"><b>✅ 이렇게 되면 성공!</b>
-    남자(왼쪽)·여자(오른쪽)가 연령대별로 뻗어나가는 <b>인구 피라미드</b>가 그려집니다.</div>
+    남자(왼쪽)·여자(오른쪽)가 연령대별로 뻗어나가는 <b>인구 피라미드</b>가 그려집니다. <b>다 됐으면 손 들어 알려주세요 🙋</b></div>
   <div class="box think"><b>🤔 이렇게 해보세요</b>
     검색창에 <b>다른 동네</b>를 넣어 비교해보세요. 신도시와 시골, 피라미드 모양이 완전히 다를 거예요!</div>
 </section>
@@ -476,11 +484,11 @@ function show(name){
   <div class="power"><small>이 레벨에서 얻는 능력</small>✨ 말 한마디로 <b>데이터 대시보드를 디자인</b></div>
 
   <div class="tabs" data-tabs>
-    <button class="tab active" data-t="ai">🤖 AI로 만들기 (추천!)</button>
-    <button class="tab" data-t="code">📋 막히면 완성 코드</button>
+    <button class="tab active" data-t="code">📋 완성 코드로 · 다 함께</button>
+    <button class="tab" data-t="ai">🤖 AI로 직접 · 도전</button>
   </div>
 
-  <div class="pane" data-p="ai">
+  <div class="pane" data-p="ai" hidden>
     <ol class="steps">
       <li>같은 AI 창에 아래 프롬프트를 이어서 보내기 → 코드 교체 → <span class="path">Commit</span> → 새로고침 👇</li>
     </ol>
@@ -498,7 +506,7 @@ function show(name){
       프롬프트에 한 줄씩 더 시켜보세요 — <b>"내 고향을 기본값으로"</b>, <b>"고령화율이 20% 넘으면 빨갛게"</b>, <b>"두 지역을 나란히 비교"</b>. 말하는 대로 바뀝니다.</div>
   </div>
 
-  <div class="pane" data-p="code" hidden>
+  <div class="pane" data-p="code">
     <div class="cbox">
       <div class="cbox-head"><span class="cbox-label">📄 완성 코드 · 밝은 대시보드 (테마 전환 포함)</span><button class="copy">복사</button></div>
       <textarea class="code" readonly>&lt;!DOCTYPE html&gt;
@@ -635,8 +643,11 @@ document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on
     </div>
   </div>
 
+  <div class="box dare"><b>⭐ 다 됐으면 — 딱 하나만 바꿔보기</b>
+    <b>도전(여유되면)</b>: 위 <span class="path">🤖 AI로 직접</span> 탭을 열어 AI에게 딱 하나만 — <b>"우리 학교 상징색으로 테마를 하나 추가해줘"</b> 또는 <b>"고령화율이 20%를 넘으면 숫자를 빨갛게"</b><br>
+    🚧 <b>하나만!</b> 욕심나면 마무리 후에 마음껏.</div>
   <div class="box check"><b>✅ 이렇게 되면 성공!</b>
-    총인구·고령화율·유소년 <b>지표 카드</b> + 예쁜 피라미드 + <b>테마 전환</b>까지 갖춘 대시보드가 완성됩니다.</div>
+    총인구·고령화율·유소년 <b>지표 카드</b> + 예쁜 피라미드 + <b>테마 전환</b>까지 갖춘 대시보드가 완성됩니다. <b>다 됐으면 손 들어 알려주세요 🙋</b></div>
 </section>
 
 <!-- ═══ CLEAR ═══ -->
