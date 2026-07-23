@@ -119,15 +119,12 @@
   .btn.next:hover{filter:brightness(1.06);}
   .btn:disabled{opacity:.4; cursor:default; box-shadow:none;}
   .btn.big{font-size:17px; padding:15px 30px;}
-  #toast{position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center; pointer-events:none;}
-  #toast.go{display:flex;}
-  #toast .card{background:var(--accent); color:#fff; padding:24px 42px; border-radius:22px; text-align:center;
-    box-shadow:0 20px 60px rgba(120,80,10,.35); animation:lvup 1.3s ease forwards;}
-  #toast .big{font-size:34px; font-weight:900; letter-spacing:1px;}
-  #toast .sm{font-size:15px; opacity:.92; margin-top:2px;}
-  @keyframes lvup{0%{transform:scale(.6) translateY(10px); opacity:0;}
-    18%{transform:scale(1.06); opacity:1;} 30%{transform:scale(1);}
-    82%{opacity:1; transform:scale(1);} 100%{opacity:0; transform:scale(.96) translateY(-8px);}}
+  #toast{position:fixed; left:50%; top:14px; transform:translateX(-50%); z-index:50; display:none; pointer-events:none;}
+  #toast.go{display:block;}
+  #toast .card{background:var(--accent); color:#fff; padding:9px 18px; border-radius:99px; white-space:nowrap;
+    font-size:14px; font-weight:800; box-shadow:0 6px 18px rgba(120,80,10,.26); animation:lvup 1.6s ease forwards;}
+  @keyframes lvup{0%{opacity:0; transform:translateY(-10px);}
+    14%{opacity:1; transform:none;} 78%{opacity:1; transform:none;} 100%{opacity:0; transform:translateY(-6px);}}
   @media (max-width:520px){
     h1.title{font-size:25px;} .cover h1{font-size:26px;}
     .step .lbl{display:none;} .btn{padding:12px 16px; font-size:14px;}
@@ -732,13 +729,13 @@ document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on
   </div>
 </div>
 
-<div id="toast"><div class="card"><div class="big">🎉 LEVEL UP!</div><div class="sm" id="toastSub"></div></div></div>
+<div id="toast"><div class="card" id="toastSub"></div></div>
 
 <script>
   const ACCENTS = ['#E8930C','#E8930C','#3E7BE0','#16A34A','#E23C86','#EAB308'];
   const SOFT    = ['#FFF3DE','#FFF0D6','#EAF2FF','#E7F6ED','#FDE7F1','#FEF6DA'];
   const LABELS  = ['표지','LEVEL 1 · 배포','LEVEL 2 · 데이터','LEVEL 3 · 시각화','LEVEL 4 · 대시보드','🏆 클리어'];
-  const UP_SUB  = ['','배포 준비 완료 🚀','데이터 소환! 📊','시각화 성공 📈','대시보드 완성 ✨','미션 클리어 🏆'];
+  const UP_SUB  = ['','🚀 LEVEL 1 · 인터넷에 올리기','📊 LEVEL 2 · 데이터 불러오기','📈 LEVEL 3 · 그래프 그리기','✨ LEVEL 4 · 대시보드 꾸미기','🏆 미션 클리어!'];
   const N = 6;
   let cur = 0, maxReached = 0;
 
@@ -765,7 +762,7 @@ document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on
     const t = document.getElementById('toast');
     document.getElementById('toastSub').textContent = UP_SUB[i];
     t.classList.remove('go'); void t.offsetWidth; t.classList.add('go');
-    setTimeout(()=>t.classList.remove('go'), 1300);
+    setTimeout(()=>t.classList.remove('go'), 1600);
   }
   document.getElementById('stepper').addEventListener('click', e=>{
     const s = e.target.closest('.step'); if(s) go(+s.dataset.go);
