@@ -244,7 +244,7 @@
     </ol>
     <div class="cbox">
       <div class="cbox-head"><span class="cbox-label">🔗 인구 데이터 주소 (그대로 복사)</span><button class="copy">복사</button></div>
-      <input class="urlbox" readonly value="https://greatsong.github.io/modeudata-population-web/population_2026_05.csv">
+      <input class="urlbox" readonly value="https://raw.githubusercontent.com/greatsong/modudata/main/data/population_latest.csv">
     </div>
     <ol class="steps" start="2" style="counter-reset:s 1;">
       <li>아래 <b>프롬프트를 복사</b>해 AI(클로드·챗지피티)에 붙여넣고, <b>맨 끝에 방금 복사한 데이터 주소를 붙여넣어</b> 전송 👇</li>
@@ -253,9 +253,12 @@
       <div class="cbox-head"><span class="cbox-label">🤖 AI 프롬프트 (붙여넣고 끝에 데이터 주소 추가)</span><button class="copy">복사</button></div>
       <textarea class="prompt" readonly style="height:240px">아래 [데이터 주소]는 우리나라 행정구역별·연령별·성별 인구 CSV야. 이 데이터를 불러와서, 지역을 검색·선택하면 그 지역의 총인구와 남/여 인구를 보여주는 웹페이지를 index.html 파일 하나로 만들어줘. 설명은 짧게, 전체 코드를 코드블록으로 한 번에 줘.
 
-■ CSV 형식
-- 첫 줄은 헤더: 행정구역,코드,남자_0세,여자_0세,…,남자_100세이상,여자_100세이상 (UTF-8 BOM 있음, 콤마 구분)
-- 한 줄이 한 지역. 지역명(첫 칸)으로 찾게 해줘. 지역이 3,900여 개니 datalist로 검색되게.
+■ CSV 형식 (행정안전부 원본 그대로 — 다루기 까다로우니 잘 파싱해줘)
+- 인코딩은 cp949(euc-kr). fetch 후 arrayBuffer로 받아 TextDecoder('euc-kr')로 디코딩해야 한글이 안 깨져.
+- 모든 칸이 큰따옴표로 감싸여 있고 숫자에 천단위 콤마가 있어(예: "9,289,813"). 값 안에 콤마가 있으니 단순 split(',') 말고 따옴표를 고려해 파싱해줘.
+- 첫 칸 행정구역은 이름 뒤에 코드가 괄호로 붙어("서울특별시 종로구 (1111000000)") — 코드는 떼고 이름만 쓰게 해줘.
+- 나이 열 이름은 "YYYY년MM월_계_0세", "…_남_0세", "…_여_0세" 식이야(계/남/여 × 0~100세이상). 남녀 인구는 _남_ / _여_ 열만 쓰고 _계_ 는 무시해(안 그러면 두 배가 됨). 총인구수·연령구간인구수 같은 집계 열도 있으니 나이 열(_숫자세)만 골라 합산해줘.
+- 한 줄이 한 지역. 지역명으로 찾게 해줘. 지역이 3,900여 개니 datalist로 검색되게.
 
 ■ 규칙
 - 외부 라이브러리 없이 순수 HTML + JavaScript 한 파일. fetch로 직접 불러와 파싱.
@@ -289,17 +292,22 @@
 
 &lt;script&gt;
 const 기본지역 = "서울특별시 종로구"; // ← 보고 싶은 지역으로 바꿔도 돼요
-const DATA_URL = "https://greatsong.github.io/modeudata-population-web/population_2026_05.csv";
+const DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/population_latest.csv";
 
 let HEADER = [], INDEX = {};
-const num = s =&gt; parseInt(s,10) || 0;
+const num = s =&gt; parseInt(String(s).replace(/[^0-9-]/g,''),10) || 0;   // 따옴표·천단위 쉼표 제거
+// 따옴표로 감싼 CSV 한 줄 파싱 (값 안에 쉼표가 있어 단순 split 불가)
+function parseCSV(line){const o=[];let c='',q=false;for(let i=0;i&lt;line.length;i++){const ch=line[i];if(ch==='"'){if(q&amp;&amp;line[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&amp;&amp;!q){o.push(c);c='';}else c+=ch;}o.push(c);return o;}
+const cleanName = s =&gt; s.replace(/\s*\(\d+\)\s*$/,'').replace(/\s+/g,' ').trim();  // "서울…종로구 (1111…)" → "서울…종로구"
 
 // 한 지역의 남/여/총 인구 합계
 function sums(cells){
   let male=0, female=0;
-  for(let i=2;i&lt;HEADER.length;i++){
+  for(let i=1;i&lt;HEADER.length;i++){
+    if(!/_(\d+)세/.test(HEADER[i])) continue;   // 나이 열만(총인구수·연령구간 제외)
     const v = num(cells[i]);
-    if(HEADER[i].startsWith('남자')) male+=v; else female+=v;
+    if(HEADER[i].includes('_남_')) male+=v;
+    else if(HEADER[i].includes('_여_')) female+=v;   // _계_ 무시
   }
   return { male, female, total: male+female };
 }
@@ -315,14 +323,15 @@ function show(name){
 }
 
 (async ()=&gt;{
-  const text = await (await fetch(DATA_URL)).text();
+  const buf = await (await fetch(DATA_URL)).arrayBuffer();
+  const text = new TextDecoder('euc-kr').decode(buf);   // 행안부 원본은 cp949 인코딩
   const lines = text.trim().split(/\r?\n/);
-  HEADER = lines[0].replace(/^﻿/,'').split(','); // 첫 줄은 제목(BOM 제거)
+  HEADER = parseCSV(lines[0]);                // 첫 줄은 열 이름
   const dl = document.getElementById('regions');
   lines.slice(1).forEach(line=&gt;{
-    const cells = line.split(',');
-    INDEX[cells[0]] = cells;                 // 지역명으로 찾을 수 있게 저장
-    const o = document.createElement('option'); o.value = cells[0]; dl.appendChild(o);
+    const cells = parseCSV(line); const name = cleanName(cells[0]);
+    INDEX[name] = cells;                      // 지역명으로 찾을 수 있게 저장
+    const o = document.createElement('option'); o.value = name; dl.appendChild(o);
   });
   const q = document.getElementById('q');
   q.value = 기본지역;
@@ -335,9 +344,9 @@ function show(name){
     </div>
   </div>
 
-  <div class="box dare"><b>⭐ 다 됐으면, 딱 하나만 바꿔보기</b>
+  <div class="box dare"><b>⭐ 다 됐으면 — 딱 하나만 바꿔보기</b>
     ① 완성 코드 <b>2번째 줄 <code>기본지역</code></b>을 우리 학교 동네로 바꿔 보세요.<br>
-    ② <b>도전(여유되면)</b>: 위 <span class="path">🤖 AI로 직접</span> 탭을 열어 AI에게 딱 하나만: <b>"없는 지역을 넣으면 안내 문구를 띄워줘"</b><br>
+    ② <b>도전(여유되면)</b>: 위 <span class="path">🤖 AI로 직접</span> 탭을 열어 AI에게 딱 하나만 — <b>"없는 지역을 넣으면 안내 문구를 띄워줘"</b><br>
     🚧 <b>여기까지만!</b> 더 하고 싶은 건 마무리 후 자유시간에.</div>
   <div class="box check"><b>✅ 이렇게 되면 성공!</b>
     검색창에 지역을 입력(예: <b>서울특별시 종로구</b>)하면 <b>총인구·남자·여자 수</b>가 나타납니다. <b>다 됐으면 손 들어 알려주세요 🙋</b></div>
@@ -366,8 +375,8 @@ function show(name){
       <textarea class="prompt" readonly style="height:180px">방금 만든 인구 페이지에 "인구 피라미드"를 추가해줘. 전체 index.html 코드를 다시 통째로 줘.
 
 - 차트는 Plotly(플롯리)로 깔끔하게 그려줘. &lt;head&gt;에 &lt;script src="https://cdn.plot.ly/plotly-2.35.2.min.js"&gt;&lt;/script&gt; 를 넣고.
-- 나이는 1세 단위(0~100세) 그대로. 마지막 '100세이상' 열은 100세 자리에 포함해줘. 남자는 왼쪽(음수 값)·여자는 오른쪽 가로 막대(barmode: 'relative'). 남/여 색 다르게, 범례 표시.
-- 되도록 x축 눈금은 절댓값으로 보이게(음수 라벨 숨김) 하고, 어려우면 기본 눈금 그대로 둬도 좋아. 배경은 투명(paper_bgcolor·plot_bgcolor를 'rgba(0,0,0,0)'), 툴바는 숨김(displayModeBar:false, responsive:true).</textarea>
+- 나이 5세 단위, 남자는 왼쪽(음수 값)·여자는 오른쪽 가로 막대(barmode: 'relative'). 남/여 색 다르게, 범례 표시.
+- x축 눈금은 절댓값으로 보이게(음수 라벨 숨김), 배경은 투명(paper_bgcolor·plot_bgcolor를 'rgba(0,0,0,0)'), 툴바는 숨김(displayModeBar:false, responsive:true).</textarea>
     </div>
     <ol class="steps" start="2" style="counter-reset:s 1;">
       <li>새 코드를 깃허브 <span class="kbd">index.html</span>에 <b>통째로 교체</b> → <span class="path">Commit</span> → <b>새로고침</b></li>
@@ -402,18 +411,22 @@ function show(name){
 
 &lt;script&gt;
 const 기본지역 = "서울특별시 종로구"; // ← 보고 싶은 지역으로 바꿔도 돼요
-const DATA_URL = "https://greatsong.github.io/modeudata-population-web/population_2026_05.csv";
+const DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/population_latest.csv";
 
 let HEADER = [], INDEX = {};
-const num = s =&gt; parseInt(s,10) || 0;
+const num = s =&gt; parseInt(String(s).replace(/[^0-9-]/g,''),10) || 0;   // 따옴표·천단위 쉼표 제거
+// 따옴표로 감싼 CSV 한 줄 파싱 (값 안에 쉼표가 있어 단순 split 불가)
+function parseCSV(line){const o=[];let c='',q=false;for(let i=0;i&lt;line.length;i++){const ch=line[i];if(ch==='"'){if(q&amp;&amp;line[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&amp;&amp;!q){o.push(c);c='';}else c+=ch;}o.push(c);return o;}
+const cleanName = s =&gt; s.replace(/\s*\(\d+\)\s*$/,'').replace(/\s+/g,' ').trim();  // "서울…종로구 (1111…)" → "서울…종로구"
 
 // 연령별(0~100세) 남/여 인구
 function ageBySex(cells){
   const m = new Array(101).fill(0), f = new Array(101).fill(0);
-  for(let i=2;i&lt;HEADER.length;i++){
-    const mm = HEADER[i].match(/_(\d+)세/); if(!mm) continue;
+  for(let i=1;i&lt;HEADER.length;i++){
+    const mm = HEADER[i].match(/_(\d+)세/); if(!mm) continue;   // 총인구수·연령구간 열은 건너뜀
     const a = Math.min(100, +mm[1]);
-    if(HEADER[i].startsWith('남자')) m[a]+=num(cells[i]); else f[a]+=num(cells[i]);
+    if(HEADER[i].includes('_남_')) m[a]+=num(cells[i]);
+    else if(HEADER[i].includes('_여_')) f[a]+=num(cells[i]);    // _계_ 열은 무시(남+여만)
   }
   return { m, f };
 }
@@ -448,13 +461,15 @@ function show(name){
 }
 
 (async ()=&gt;{
-  const text = await (await fetch(DATA_URL)).text();
+  const buf = await (await fetch(DATA_URL)).arrayBuffer();
+  const text = new TextDecoder('euc-kr').decode(buf);   // 행안부 원본은 cp949 인코딩
   const lines = text.trim().split(/\r?\n/);
-  HEADER = lines[0].replace(/^﻿/,'').split(',');
+  HEADER = parseCSV(lines[0]);
   const dl = document.getElementById('regions');
   lines.slice(1).forEach(line=&gt;{
-    const cells = line.split(','); INDEX[cells[0]] = cells;
-    const o = document.createElement('option'); o.value = cells[0]; dl.appendChild(o);
+    const cells = parseCSV(line); const name = cleanName(cells[0]);
+    INDEX[name] = cells;
+    const o = document.createElement('option'); o.value = name; dl.appendChild(o);
   });
   const q = document.getElementById('q');
   q.value = 기본지역;
@@ -467,8 +482,8 @@ function show(name){
     </div>
   </div>
 
-  <div class="box dare"><b>⭐ 다 됐으면, 딱 하나만 바꿔보기</b>
-    <b>도전(여유되면)</b>: 위 <span class="path">🤖 AI로 직접</span> 탭을 열어 AI에게 딱 하나만: <b>"막대 색을 바꿔줘"</b> 또는 <b>"나이를 10세 단위로 묶어줘"</b><br>
+  <div class="box dare"><b>⭐ 다 됐으면 — 딱 하나만 바꿔보기</b>
+    <b>도전(여유되면)</b>: 위 <span class="path">🤖 AI로 직접</span> 탭을 열어 AI에게 딱 하나만 — <b>"막대 색을 바꿔줘"</b> 또는 <b>"나이를 10세 단위로 묶어줘"</b><br>
     🚧 <b>색·묶음 정도만!</b> 준비되면 다음 레벨 ▶</div>
   <div class="box check"><b>✅ 이렇게 되면 성공!</b>
     남자(왼쪽)·여자(오른쪽)가 연령대별로 뻗어나가는 <b>인구 피라미드</b>가 그려집니다. <b>다 됐으면 손 들어 알려주세요 🙋</b></div>
@@ -499,11 +514,11 @@ function show(name){
 - 밝은 크림/골드 톤 배경, 둥근 모서리, 부드러운 그림자.
 - 상단에 지표 카드 4개: 총인구 / 남·여 / 고령화율(65세 이상 비율) / 유소년(0-14세 비율).
 - 인구 피라미드(Plotly)는 그대로 유지하되 배경 투명으로 페이지 톤과 어울리게.
-- 맨 위에 테마 전환 버튼 3개(🍞크림 / 🌿민트 / 🍓베리), CSS 변수로 색만 바꾸는 방식.
+- 맨 위에 테마 전환 버튼 3개(🍞크림 / 🌿민트 / 🍓베리) — CSS 변수로 색만 바꾸는 방식.
 - 휴대폰에서도 예쁘게 보이도록 반응형으로.</textarea>
     </div>
     <div class="box tipbox"><b>🎨 진짜 바이브코딩은 여기서부터</b>
-      프롬프트에 한 줄씩 더 시켜보세요: <b>"내 고향을 기본값으로"</b>, <b>"고령화율이 20% 넘으면 빨갛게"</b>, <b>"두 지역을 나란히 비교"</b>. 말하는 대로 바뀝니다.</div>
+      프롬프트에 한 줄씩 더 시켜보세요 — <b>"내 고향을 기본값으로"</b>, <b>"고령화율이 20% 넘으면 빨갛게"</b>, <b>"두 지역을 나란히 비교"</b>. 말하는 대로 바뀝니다.</div>
   </div>
 
   <div class="pane" data-p="code">
@@ -560,22 +575,26 @@ function show(name){
     &lt;datalist id="regions"&gt;&lt;/datalist&gt;
     &lt;div class="cards" id="cards"&gt;&lt;/div&gt;
     &lt;div id="py"&gt;&lt;/div&gt;
-    &lt;p class="foot"&gt;데이터: 행정안전부 주민등록 인구(2026.05)&lt;/p&gt;
+    &lt;p class="foot"&gt;데이터: 행정안전부 주민등록 인구(매월 자동 갱신)&lt;/p&gt;
   &lt;/div&gt;
 
 &lt;script&gt;
 const 기본지역 = "서울특별시 종로구"; // ← 보고 싶은 지역으로 바꿔도 돼요
-const DATA_URL = "https://greatsong.github.io/modeudata-population-web/population_2026_05.csv";
+const DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/population_latest.csv";
 
 let HEADER = [], INDEX = {};
-const num = s =&gt; parseInt(s,10) || 0;
+const num = s =&gt; parseInt(String(s).replace(/[^0-9-]/g,''),10) || 0;   // 따옴표·천단위 쉼표 제거
+// 따옴표로 감싼 CSV 한 줄 파싱 (값 안에 쉼표가 있어 단순 split 불가)
+function parseCSV(line){const o=[];let c='',q=false;for(let i=0;i&lt;line.length;i++){const ch=line[i];if(ch==='"'){if(q&amp;&amp;line[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&amp;&amp;!q){o.push(c);c='';}else c+=ch;}o.push(c);return o;}
+const cleanName = s =&gt; s.replace(/\s*\(\d+\)\s*$/,'').replace(/\s+/g,' ').trim();  // "서울…종로구 (1111…)" → "서울…종로구"
 
 function ageBySex(cells){
   const m = new Array(101).fill(0), f = new Array(101).fill(0);
-  for(let i=2;i&lt;HEADER.length;i++){
-    const mm = HEADER[i].match(/_(\d+)세/); if(!mm) continue;
+  for(let i=1;i&lt;HEADER.length;i++){
+    const mm = HEADER[i].match(/_(\d+)세/); if(!mm) continue;   // 총인구수·연령구간 열은 건너뜀
     const a = Math.min(100, +mm[1]);
-    if(HEADER[i].startsWith('남자')) m[a]+=num(cells[i]); else f[a]+=num(cells[i]);
+    if(HEADER[i].includes('_남_')) m[a]+=num(cells[i]);
+    else if(HEADER[i].includes('_여_')) f[a]+=num(cells[i]);    // _계_ 열은 무시(남+여만)
   }
   return { m, f };
 }
@@ -625,13 +644,15 @@ document.body.dataset.theme = st;
 document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on', x.dataset.th===st));
 
 (async ()=&gt;{
-  const text = await (await fetch(DATA_URL)).text();
+  const buf = await (await fetch(DATA_URL)).arrayBuffer();
+  const text = new TextDecoder('euc-kr').decode(buf);   // 행안부 원본은 cp949 인코딩
   const lines = text.trim().split(/\r?\n/);
-  HEADER = lines[0].replace(/^﻿/,'').split(',');
+  HEADER = parseCSV(lines[0]);
   const dl = document.getElementById('regions');
   lines.slice(1).forEach(line=&gt;{
-    const cells = line.split(','); INDEX[cells[0]] = cells;
-    const o = document.createElement('option'); o.value = cells[0]; dl.appendChild(o);
+    const cells = parseCSV(line); const name = cleanName(cells[0]);
+    INDEX[name] = cells;
+    const o = document.createElement('option'); o.value = name; dl.appendChild(o);
   });
   const q = document.getElementById('q'); q.value = 기본지역;
   q.addEventListener('input', ()=&gt;{ if(INDEX[q.value]) show(q.value); });
@@ -643,8 +664,8 @@ document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on
     </div>
   </div>
 
-  <div class="box dare"><b>⭐ 다 됐으면, 딱 하나만 바꿔보기</b>
-    <b>도전(여유되면)</b>: 위 <span class="path">🤖 AI로 직접</span> 탭을 열어 AI에게 딱 하나만: <b>"우리 학교 상징색으로 테마를 하나 추가해줘"</b> 또는 <b>"고령화율이 20%를 넘으면 숫자를 빨갛게"</b><br>
+  <div class="box dare"><b>⭐ 다 됐으면 — 딱 하나만 바꿔보기</b>
+    <b>도전(여유되면)</b>: 위 <span class="path">🤖 AI로 직접</span> 탭을 열어 AI에게 딱 하나만 — <b>"우리 학교 상징색으로 테마를 하나 추가해줘"</b> 또는 <b>"고령화율이 20%를 넘으면 숫자를 빨갛게"</b><br>
     🚧 <b>하나만!</b> 욕심나면 마무리 후에 마음껏.</div>
   <div class="box check"><b>✅ 이렇게 되면 성공!</b>
     총인구·고령화율·유소년 <b>지표 카드</b> + 예쁜 피라미드 + <b>테마 전환</b>까지 갖춘 대시보드가 완성됩니다. <b>다 됐으면 손 들어 알려주세요 🙋</b></div>
@@ -683,17 +704,8 @@ document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on
     </ul>
   </div>
 
-  <div class="mission">
-    <h3>🎞️ 시간을 움직여 보세요 (애니메이션)</h3>
-    <ul>
-      <li>표에 <b>시간 열</b>(연도·월·날짜)이 있으면, AI에게 <b>"연도 슬라이더로 애니메이션 해줘"</b> 한마디로 그래프가 움직입니다.</li>
-      <li>연도별 인구 데이터로 피라미드에 연도 슬라이더를 달면, 우리 동네가 <b>12년 동안 변해 가는 모습</b>이 영상처럼 재생됩니다. (예: 서울 강남구 대치1동)</li>
-      <li>지도든 막대그래프든 똑같아요. 시간 열만 있으면 무엇이든 움직입니다.</li>
-    </ul>
-  </div>
-
   <div class="mission" style="border:1.5px solid var(--gold);background:linear-gradient(180deg,#FFFBEF,var(--card2));">
-    <h3>🍚 다음 미션: 학교에서 꼭 만들어 보세요!</h3>
+    <h3>🍚 다음 미션 — 학교에서 꼭 만들어 보세요!</h3>
     <ul>
       <li>오늘은 <b>공공 인구 데이터</b>로 감을 잡았어요. 이번엔 <b>우리 학교 데이터</b>로!</li>
       <li>학교로 돌아가 <b>우리 학교 급식 투표 앱</b>을 직접 만들어 보세요. 오늘의 마중물이 진짜 물길이 됩니다.</li>
