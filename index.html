@@ -240,17 +240,17 @@
 
   <div class="pane" data-p="ai" hidden>
     <ol class="steps">
-      <li>아래 <b>인구 데이터 주소를 복사</b>하세요 (수정할 것 없이 그대로). <span class="hl">새 탭에서 열어보면 진짜 인구 CSV가 보여요!</span> 👇</li>
+      <li>아래 데이터 주소를 <b>새 탭에서 열어보세요</b>. <span class="hl">진짜 인구 CSV가 보여요!</span> (복사는 안 해도 돼요 — 다음 프롬프트에 이미 들어 있어요) 👇</li>
     </ol>
     <div class="cbox">
       <div class="cbox-head"><span class="cbox-label">🔗 인구 데이터 주소 (그대로 복사)</span><button class="copy">복사</button></div>
       <input class="urlbox" readonly value="https://raw.githubusercontent.com/greatsong/modudata/main/data/population_latest.csv">
     </div>
     <ol class="steps" start="2" style="counter-reset:s 1;">
-      <li>아래 <b>프롬프트를 복사</b>해 AI(클로드·챗지피티)에 붙여넣고, <b>맨 끝에 방금 복사한 데이터 주소를 붙여넣어</b> 전송 👇</li>
+      <li>아래 <b>프롬프트를 그대로 복사</b>해 AI(클로드·챗지피티)에 붙여넣고 <b>전송</b>하세요 👇 <span class="hl">데이터 주소가 이미 들어 있어요!</span></li>
     </ol>
     <div class="cbox">
-      <div class="cbox-head"><span class="cbox-label">🤖 AI 프롬프트 (붙여넣고 끝에 데이터 주소 추가)</span><button class="copy">복사</button></div>
+      <div class="cbox-head"><span class="cbox-label">🤖 AI 프롬프트 (주소 포함 · 그대로 복사)</span><button class="copy">복사</button></div>
       <textarea class="prompt" readonly style="height:240px">아래 [데이터 주소]는 우리나라 행정구역별·연령별·성별 인구 CSV야. 이 데이터를 불러와서, 지역을 검색·선택하면 그 지역의 총인구와 남/여 인구를 보여주는 웹페이지를 index.html 파일 하나로 만들어줘. 설명은 짧게, 전체 코드를 코드블록으로 한 번에 줘.
 
 ■ CSV 형식 (행정안전부 원본 그대로 — 다루기 까다로우니 잘 파싱해줘)
@@ -264,7 +264,8 @@
 - 외부 라이브러리 없이 순수 HTML + JavaScript 한 파일. fetch로 직접 불러와 파싱.
 - 숫자에 천단위 콤마 표시.
 
-■ 데이터 주소 (아래에 붙여넣기 👇)
+■ 데이터 주소
+https://raw.githubusercontent.com/greatsong/modudata/main/data/population_latest.csv
 </textarea>
     </div>
     <ol class="steps" start="3" style="counter-reset:s 2;">
@@ -695,22 +696,18 @@ document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on
     </ul>
   </div>
 
-  <div class="mission">
-    <h3>🚀 이제 바꿔보세요 (바이브코딩)</h3>
-    <ul>
-      <li>인구 → <b>다른 공공데이터</b>(대중교통·기온·상권·아파트 가격)로 바꿔보기</li>
-      <li>AI에게 <b>"이 데이터 주소로 똑같이 만들어줘"</b> 한마디면 끝!</li>
-      <li>완성한 <b>내 대시보드 주소를 동료에게 공유</b> 🎉</li>
-    </ul>
-  </div>
-
   <div class="mission" style="border:1.5px solid var(--gold);background:linear-gradient(180deg,#FFFBEF,var(--card2));">
-    <h3>🍚 다음 미션 — 학교에서 꼭 만들어 보세요!</h3>
+    <h3>🚀 이제 나만의 인구 수업을 만들어보세요</h3>
+    <p style="margin:0 0 8px;color:var(--muted);font-size:14px;">같은 인구 데이터 하나로 이렇게 다양한 수업이 됩니다 👇</p>
     <ul>
-      <li>오늘은 <b>공공 인구 데이터</b>로 감을 잡았어요. 이번엔 <b>우리 학교 데이터</b>로!</li>
-      <li>학교로 돌아가 <b>우리 학교 급식 투표 앱</b>을 직접 만들어 보세요. 오늘의 마중물이 진짜 물길이 됩니다.</li>
-      <li>👉 <b>greatsong.github.io/meal</b> 에서 똑같이 따라 만들기</li>
+      <li>📉 <b>사회·지리</b> — 저출생·고령화·지역소멸을 데이터로 탐구·토론</li>
+      <li>📊 <b>수학</b> — 인구 비율·피라미드로 통계 단원, 두 지역 비교 프로젝트</li>
+      <li>🧩 <b>정보·데이터과학</b> — 전국 동네를 인구 구조로 <b>군집(유형)</b> 분류</li>
+      <li>🔎 <b>탐구·발표</b> — 학생이 <b>자기 동네</b>를 조사해 "우리 동네 이야기" 발표</li>
+      <li>🤖 <b>AI 활용</b> — "이 동네 인구가 말해주는 것"을 AI와 함께 해석·글쓰기</li>
+      <li>🏫 우리 학교 <b>통학구역 인구</b>로 학생 수 변화 살펴보기</li>
     </ul>
+    <p style="margin:8px 0 0;color:var(--muted);font-size:14px;">완성한 <b>대시보드 주소를 동료·학생과 공유</b>하고, AI에게 <b>"내 고향을 기본값으로"</b>·<b>"두 지역 나란히 비교"</b> 한마디씩 더 시켜 계속 바꿔보세요 🎉</p>
   </div>
 
   <button class="btn next big" onclick="go(0)">🔄 처음으로</button>
