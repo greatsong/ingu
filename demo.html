@@ -49,22 +49,26 @@
     <datalist id="regions"></datalist>
     <div class="cards" id="cards"></div>
     <div id="py"></div>
-    <p class="foot">데이터: 행정안전부 주민등록 인구(2026.05)</p>
+    <p class="foot">데이터: 행정안전부 주민등록 인구(매월 자동 갱신)</p>
   </div>
 
 <script>
 const 기본지역 = "서울특별시 종로구"; // ← 보고 싶은 지역으로 바꿔도 돼요
-const DATA_URL = "https://greatsong.github.io/modeudata-population-web/population_2026_05.csv";
+const DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/population_latest.csv";
 
 let HEADER = [], INDEX = {};
-const num = s => parseInt(s,10) || 0;
+const num = s => parseInt(String(s).replace(/[^0-9-]/g,''),10) || 0;   // 따옴표·천단위 쉼표 제거
+// 따옴표로 감싼 CSV 한 줄 파싱 (값 안에 쉼표가 있어 단순 split 불가)
+function parseCSV(line){const o=[];let c='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&&!q){o.push(c);c='';}else c+=ch;}o.push(c);return o;}
+const cleanName = s => s.replace(/\s*\(\d+\)\s*$/,'').replace(/\s+/g,' ').trim();  // "서울…종로구 (1111…)" → "서울…종로구"
 
 function ageBySex(cells){
   const m = new Array(101).fill(0), f = new Array(101).fill(0);
-  for(let i=2;i<HEADER.length;i++){
-    const mm = HEADER[i].match(/_(\d+)세/); if(!mm) continue;
+  for(let i=1;i<HEADER.length;i++){
+    const mm = HEADER[i].match(/_(\d+)세/); if(!mm) continue;   // 총인구수·연령구간 열은 건너뜀
     const a = Math.min(100, +mm[1]);
-    if(HEADER[i].startsWith('남자')) m[a]+=num(cells[i]); else f[a]+=num(cells[i]);
+    if(HEADER[i].includes('_남_')) m[a]+=num(cells[i]);
+    else if(HEADER[i].includes('_여_')) f[a]+=num(cells[i]);    // _계_ 열은 무시(남+여만)
   }
   return { m, f };
 }
@@ -114,13 +118,15 @@ document.body.dataset.theme = st;
 document.querySelectorAll('.themes button').forEach(x=>x.classList.toggle('on', x.dataset.th===st));
 
 (async ()=>{
-  const text = await (await fetch(DATA_URL)).text();
+  const buf = await (await fetch(DATA_URL)).arrayBuffer();
+  const text = new TextDecoder('euc-kr').decode(buf);   // 행안부 원본은 cp949 인코딩
   const lines = text.trim().split(/\r?\n/);
-  HEADER = lines[0].replace(/^﻿/,'').split(',');
+  HEADER = parseCSV(lines[0]);
   const dl = document.getElementById('regions');
   lines.slice(1).forEach(line=>{
-    const cells = line.split(','); INDEX[cells[0]] = cells;
-    const o = document.createElement('option'); o.value = cells[0]; dl.appendChild(o);
+    const cells = parseCSV(line); const name = cleanName(cells[0]);
+    INDEX[name] = cells;
+    const o = document.createElement('option'); o.value = name; dl.appendChild(o);
   });
   const q = document.getElementById('q'); q.value = 기본지역;
   q.addEventListener('input', ()=>{ if(INDEX[q.value]) show(q.value); });
