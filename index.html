@@ -716,7 +716,10 @@ document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on
     </ul>
   </div>
 
-  <button class="btn next big" onclick="go(0)">🔄 처음으로</button>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px;">
+    <a class="btn next big" href="https://greatsong.github.io/workshop/" style="display:inline-block;text-decoration:none;">🏠 워크샵 메인으로 돌아가기 →</a>
+    <button class="btn prev" onclick="go(0)">🔄 처음부터 다시</button>
+  </div>
 </section>
 
 </main>
