@@ -59,6 +59,11 @@
   ol.steps b{color:var(--ink);}
   .kbd{display:inline-block; background:#fff; border:1px solid var(--line); border-bottom-width:2px;
     border-radius:6px; padding:1px 7px; font-size:13px; font-weight:700; font-family:inherit; color:var(--ink);}
+  .kbd.cp{cursor:pointer; user-select:all;}
+  .kbd.cp::after{content:"⧉"; font-size:11px; margin-left:5px; opacity:.45;}
+  .kbd.cp:hover{background:var(--accent-soft); border-color:var(--accent); color:var(--accent);}
+  .kbd.cp.done{background:var(--ok-soft); border-color:var(--ok-line); color:var(--ok);}
+  .kbd.cp.done::after{content:"복사됨 ✓"; font-size:10.5px; font-weight:800; opacity:1;}
   .path{background:var(--accent-soft); color:var(--accent); font-weight:800; padding:1px 7px; border-radius:6px; font-size:13.5px;}
   .tabs{display:flex; gap:8px; margin:6px 0 14px; flex-wrap:wrap;}
   .tab{border:1px solid var(--line); background:#fff; color:var(--muted); font-weight:700;
@@ -190,8 +195,8 @@
 
   <ol class="steps">
     <li><a href="https://github.com" target="_blank" rel="noopener" style="color:var(--accent);font-weight:800;text-decoration:underline">github.com</a> 접속·로그인 → 오른쪽 위 <span class="kbd">+</span> ▸ <span class="path">New repository</span></li>
-    <li>이름에 <span class="kbd">population</span> 입력 · <b>Public</b> 선택 · <b>Add a README file</b> 체크 ▸ <span class="path">Create repository</span></li>
-    <li><span class="path">Add file</span> ▸ <span class="path">Create new file</span> ▸ 파일 이름을 <span class="kbd">index.html</span> 로</li>
+    <li>이름에 <span class="kbd cp" title="클릭하면 복사돼요">population</span> 입력 · <b>Public</b> 선택 · <b>Add a README file</b> 체크 ▸ <span class="path">Create repository</span></li>
+    <li><span class="path">Add file</span> ▸ <span class="path">Create new file</span> ▸ 파일 이름을 <span class="kbd cp" title="클릭하면 복사돼요">index.html</span> 로</li>
     <li>아래 코드를 <b>복사</b>해서 붙여넣기 👇</li>
   </ol>
 
@@ -212,7 +217,7 @@
 
   <ol class="steps" start="5" style="counter-reset:s 4;">
     <li>초록색 <span class="path">Commit changes</span> 버튼 클릭</li>
-    <li><span class="path">Settings</span> ▸ 왼쪽 <span class="path">Pages</span> ▸ Branch를 <span class="kbd">main</span> 으로 ▸ <span class="path">Save</span></li>
+    <li><span class="path">Settings</span> ▸ 왼쪽 <span class="path">Pages</span> ▸ Branch를 <span class="kbd cp" title="클릭하면 복사돼요">main</span> 으로 ▸ <span class="path">Save</span></li>
     <li>1~2분 뒤, 위쪽에 뜬 <b>내 주소</b>(<code>내아이디.github.io/population</code>)를 새 탭에서 열기</li>
   </ol>
 
@@ -267,7 +272,7 @@ https://raw.githubusercontent.com/greatsong/modudata/main/data/population_latest
 </textarea>
     </div>
     <ol class="steps" start="3" style="counter-reset:s 2;">
-      <li>AI가 준 <b>index.html 코드 전체를 복사</b> → 깃허브 <span class="kbd">index.html</span> 편집(연필 ✏️) → <b>기존 내용 다 지우고</b> 붙여넣기 → <span class="path">Commit changes</span></li>
+      <li>AI가 준 <b>index.html 코드 전체를 복사</b> → 깃허브 <span class="kbd cp" title="클릭하면 복사돼요">index.html</span> 편집(연필 ✏️) → <b>기존 내용 다 지우고</b> 붙여넣기 → <span class="path">Commit changes</span></li>
       <li>내 주소 탭으로 가서 <b>새로고침</b>(<span class="kbd">F5</span>)</li>
     </ol>
   </div>
@@ -378,7 +383,7 @@ function show(name){
 - x축 눈금은 절댓값으로 보이게(음수 라벨 숨김), 배경은 투명(paper_bgcolor·plot_bgcolor를 'rgba(0,0,0,0)'), 툴바는 숨김(displayModeBar:false, responsive:true).</textarea>
     </div>
     <ol class="steps" start="2" style="counter-reset:s 1;">
-      <li>새 코드를 깃허브 <span class="kbd">index.html</span>에 <b>통째로 교체</b> → <span class="path">Commit</span> → <b>새로고침</b></li>
+      <li>새 코드를 깃허브 <span class="kbd cp" title="클릭하면 복사돼요">index.html</span>에 <b>통째로 교체</b> → <span class="path">Commit</span> → <b>새로고침</b></li>
     </ol>
   </div>
 
@@ -782,6 +787,22 @@ document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on
     const old = btn.textContent; btn.textContent='복사됨! ✓'; btn.classList.add('done');
     setTimeout(()=>{ btn.textContent=old; btn.classList.remove('done'); }, 1400);
   });
+  // 저장소명·파일명 원클릭 복사
+  document.addEventListener('click', e=>{
+    const k = e.target.closest('.kbd.cp'); if(!k) return;
+    const txt = k.textContent.trim();
+    const done = ()=>{ k.classList.add('done'); setTimeout(()=>k.classList.remove('done'), 1300); };
+    if(navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(txt).then(done).catch(()=>fallback());
+    } else fallback();
+    function fallback(){
+      const ta=document.createElement('textarea'); ta.value=txt;
+      ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+      ta.select(); try{document.execCommand('copy');}catch(_){}
+      document.body.removeChild(ta); done();
+    }
+  });
+
   document.addEventListener('keydown', e=>{
     if(e.target.matches('textarea,input')) return;
     if(e.key==='ArrowRight') go(cur+1);
