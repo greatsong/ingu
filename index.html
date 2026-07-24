@@ -248,7 +248,10 @@
     </ol>
     <div class="cbox">
       <div class="cbox-head"><span class="cbox-label">🤖 AI 프롬프트 (주소 포함 · 그대로 복사)</span><button class="copy">복사</button></div>
-      <textarea class="prompt" readonly style="height:240px">아래 [데이터 주소]는 우리나라 행정구역별·연령별·성별 인구 CSV야. 이 데이터를 불러와서, 지역을 검색·선택하면 그 지역의 총인구와 남/여 인구를 보여주는 웹페이지를 index.html 파일 하나로 만들어줘. 설명은 짧게, 전체 코드를 코드블록으로 한 번에 줘.
+      <textarea class="prompt" readonly style="height:240px">아래 주소의 CSV는 우리나라 행정구역별·연령별·성별 인구 데이터야.
+https://raw.githubusercontent.com/greatsong/modudata/main/data/population_latest.csv
+
+이 데이터를 불러와서, 지역을 검색·선택하면 그 지역의 총인구와 남/여 인구를 보여주는 웹페이지를 index.html 파일 하나로 만들어줘. 설명은 짧게, 전체 코드를 코드블록으로 한 번에 줘.
 
 ■ CSV 형식 (행정안전부 원본 그대로 — 다루기 까다로우니 잘 파싱해줘)
 - 인코딩은 cp949(euc-kr). fetch 후 arrayBuffer로 받아 TextDecoder('euc-kr')로 디코딩해야 한글이 안 깨져.
@@ -261,8 +264,6 @@
 - 외부 라이브러리 없이 순수 HTML + JavaScript 한 파일. fetch로 직접 불러와 파싱.
 - 숫자에 천단위 콤마 표시.
 
-■ 데이터 주소
-https://raw.githubusercontent.com/greatsong/modudata/main/data/population_latest.csv
 </textarea>
     </div>
     <ol class="steps" start="3" style="counter-reset:s 2;">
