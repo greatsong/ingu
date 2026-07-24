@@ -33,6 +33,29 @@
   .card .v{font-size:1.15rem;font-weight:800;color:var(--accent);margin-top:2px;}
   #py{width:100%;}
   .foot{color:var(--muted);font-size:.8rem;margin-top:14px;}
+  /* ── 지도 카드 ── */
+  .mapcard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;
+    box-shadow:0 1px 4px var(--shadow);margin-bottom:14px;}
+  .mapcard .mt{font-weight:800;margin-bottom:8px;}
+  .mctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;font-size:.85rem;font-weight:700;}
+  .mctl select,.mctl input{border:1px solid var(--border);border-radius:.6rem;padding:.35rem .5rem;
+    font-family:inherit;font-size:.88rem;background:#fff;color:var(--text);}
+  .mctl input{width:62px;}
+  .mapbox{position:relative;}
+  #map{width:100%;height:auto;display:block;}   /* 반응형: 가로 100% */
+  #map path{stroke:#fff;stroke-width:.4;cursor:pointer;}
+  #map path.hl{stroke:var(--accent);stroke-width:1.1;filter:brightness(1.12);}
+  .lgd{position:absolute;left:4px;bottom:4px;display:flex;align-items:center;gap:6px;
+    font-size:.72rem;font-weight:700;color:var(--muted);background:rgba(255,255,255,.82);border-radius:8px;padding:3px 8px;}
+  .lgd .bar{width:90px;height:8px;border-radius:99px;background:linear-gradient(90deg,#FFF3D6,#D9480F);}
+  #tip{position:absolute;pointer-events:none;background:rgba(255,255,255,.97);border:1px solid var(--border);
+    border-radius:10px;padding:7px 10px;font-size:.78rem;line-height:1.45;box-shadow:0 3px 12px var(--shadow);
+    white-space:nowrap;z-index:5;color:#3A2E1A;}
+  #tip b{font-size:.84rem;}
+  .rank{font-size:.8rem;margin-top:8px;}
+  .rank button{border:1px solid var(--border);background:#fff;color:var(--text);border-radius:99px;
+    padding:2px 8px;font-size:.74rem;font-weight:700;cursor:pointer;font-family:inherit;margin:0 3px 4px 0;}
+  .rank button:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
   @media(max-width:560px){.cards{grid-template-columns:repeat(2,1fr);}}
 </style>
 </head>
@@ -45,6 +68,32 @@
     </div>
     <h1>🏘️ 우리 동네 <span class="a">인구 구조</span></h1>
     <div class="under"></div>
+
+    <!-- 지도: 전국을 색으로 보고, 클릭하면 아래 대시보드가 그 지역으로 바뀜 -->
+    <div class="mapcard">
+      <div class="mt">🗺️ 전국에서 우리 동네는?</div>
+      <div class="mctl">
+        <select id="metric">
+          <option value="65,100" selected>고령화율 (65세 이상)</option>
+          <option value="0,14">유소년 비율 (0~14세)</option>
+          <option value="13,18">청소년 비율 (13~18세)</option>
+          <option value="14,14">만 14세 비율</option>
+          <option value="0,6">영유아 비율 (0~6세)</option>
+          <option value="0,0">0세 비율 (갓 태어난 아기)</option>
+          <option value="custom">✏️ 직접 입력</option>
+        </select>
+        <span id="customAge" hidden>만 <input id="ageLo" type="number" value="0" min="0" max="100">세 ~
+          <input id="ageHi" type="number" value="100" min="0" max="100">세</span>
+      </div>
+      <div class="mapbox" id="mapbox">
+        <svg id="map"></svg>
+        <div class="lgd"><span id="lgMin"></span><span class="bar"></span><span id="lgMax"></span></div>
+        <div id="tip" hidden></div>
+      </div>
+      <div class="rank" id="rankTop"></div>
+      <div class="rank" id="rankLow"></div>
+    </div>
+
     <input id="q" list="regions" placeholder="동네 이름 입력 (예: 서울특별시 종로구)">
     <datalist id="regions"></datalist>
     <div class="cards" id="cards"></div>
@@ -55,6 +104,7 @@
 <script>
 const 기본지역 = "서울특별시 종로구"; // ← 보고 싶은 지역으로 바꿔도 돼요
 const DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/population_latest.csv";
+const MAP_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/sigungu_pop.json";
 
 let HEADER = [], INDEX = {};
 const num = s => parseInt(String(s).replace(/[^0-9-]/g,''),10) || 0;   // 따옴표·천단위 쉼표 제거
@@ -108,6 +158,107 @@ function show(name){
   drawPyramid(m, f);
 }
 
+/* ───────── 지도 ───────── */
+const AGE = {}, VALS = {}, RANK = {};   // 나이 배열 캐시 · 현재 지표값 · 전국 순위
+let MAPREG = [], NREG = 0;              // [{n:지역명, el:path}]
+
+function ageOf(name){        // 나이별 인구(남+여 합) — 지역당 1번만 계산해 저장
+  if(AGE[name]) return AGE[name];
+  const cells = INDEX[name]; if(!cells) return null;
+  const {m,f} = ageBySex(cells);
+  const arr = m.map((v,i)=>v+f[i]);
+  return AGE[name] = { arr, total: rsum(arr,0,100) };
+}
+function metricRange(){      // 선택된 지표의 나이 구간 [시작, 끝]
+  const sel = document.getElementById('metric').value;
+  if(sel !== 'custom') return sel.split(',').map(Number);
+  const cl = v => Math.min(100, Math.max(0, parseInt(v,10)||0));
+  let lo = cl(document.getElementById('ageLo').value), hi = cl(document.getElementById('ageHi').value);
+  return lo<=hi ? [lo,hi] : [hi,lo];
+}
+const fmt = v => v.toFixed(v<10?2:1)+'%';
+const 시도약칭 = {'강원특별자치도':'강원','경기도':'경기','경상남도':'경남','경상북도':'경북','광주광역시':'광주','대구광역시':'대구','대전광역시':'대전','부산광역시':'부산','서울특별시':'서울','세종특별자치시':'세종','울산광역시':'울산','인천광역시':'인천','전라남도':'전남','전북특별자치도':'전북','제주특별자치도':'제주','충청남도':'충남','충청북도':'충북'};
+const 짧은이름 = n => { const [a,...r]=n.split(' '); const s=시도약칭[a]||a.slice(0,2); return r.length ? s+' '+r.join(' ') : s; };
+
+function buildMap(list){
+  // 투영: x=경도×cos(36°) (위도 보정), y=－위도. ×100은 보기 좋은 숫자 크기로
+  const kx = Math.cos(36*Math.PI/180)*100, ky = 100;
+  const px = lon => lon*kx, py = lat => -lat*ky;
+  let x0=1e9, y0=1e9, x1=-1e9, y1=-1e9;
+  list.forEach(g=>g.p.forEach(poly=>poly.forEach(ring=>ring.forEach(pt=>{
+    const x=px(pt[0]), y=py(pt[1]);
+    if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y;
+  }))));
+  const svg = document.getElementById('map');
+  svg.setAttribute('viewBox', `${(x0-2).toFixed(1)} ${(y0-2).toFixed(1)} ${(x1-x0+4).toFixed(1)} ${(y1-y0+4).toFixed(1)}`);
+  const dByName = new Map();   // 같은 이름(청주시 3조각)은 path 하나로 합침
+  list.forEach(g=>{
+    let d='';
+    g.p.forEach(poly=>poly.forEach(ring=>{
+      d += 'M'+ring.map(pt=>px(pt[0]).toFixed(1)+' '+py(pt[1]).toFixed(1)).join('L')+'Z';
+    }));
+    dByName.set(g.n, (dByName.get(g.n)||'')+d);
+  });
+  dByName.forEach((d,n)=>{
+    const el = document.createElementNS('http://www.w3.org/2000/svg','path');
+    el.setAttribute('d', d);
+    el.addEventListener('pointerenter', ()=>{ el.classList.add('hl'); svg.appendChild(el); });  // 하이라이트(외곽선이 안 가리게 맨 위로)
+    el.addEventListener('pointermove', e=>showTip(e,n));
+    el.addEventListener('pointerdown', e=>showTip(e,n));   // 모바일 터치도 툴팁
+    el.addEventListener('pointerleave', ()=>{ el.classList.remove('hl'); hideTip(); });
+    el.addEventListener('click', ()=>pick(n));
+    svg.appendChild(el);
+    MAPREG.push({n, el});
+  });
+}
+function paint(){            // 지표에 맞게 색 칠하기 + 범례 + 랭킹
+  const [lo,hi] = metricRange();
+  const vs = [];
+  MAPREG.forEach(({n})=>{
+    const a = ageOf(n);
+    const v = (a && a.total) ? rsum(a.arr,lo,hi)/a.total*100 : null;
+    VALS[n] = v; if(v!=null) vs.push(v);
+  });
+  const vMin = Math.min(...vs), vMax = Math.max(...vs);
+  const t2c = t => `rgb(${Math.round(255+(217-255)*t)},${Math.round(243+(72-243)*t)},${Math.round(214+(15-214)*t)})`;  // 크림→주황
+  MAPREG.forEach(({n,el})=>{
+    const v = VALS[n];
+    el.setAttribute('fill', v==null ? '#eee' : t2c((v-vMin)/(vMax-vMin||1)));
+  });
+  document.getElementById('lgMin').textContent = fmt(vMin);
+  document.getElementById('lgMax').textContent = fmt(vMax);
+  const sorted = MAPREG.filter(({n})=>VALS[n]!=null).map(({n})=>n).sort((a,b)=>VALS[b]-VALS[a]);
+  NREG = sorted.length; sorted.forEach((n,i)=>RANK[n]=i+1);   // 전국 순위(내림차순)
+  const btns = ns => ns.map(n=>`<button data-n="${n}">${짧은이름(n)} ${fmt(VALS[n])}</button>`).join('');
+  document.getElementById('rankTop').innerHTML = '🏆 상위 5 · '+btns(sorted.slice(0,5));
+  document.getElementById('rankLow').innerHTML = '🐢 하위 5 · '+btns(sorted.slice(-5).reverse());
+}
+const tip = document.getElementById('tip');
+function showTip(e,n){
+  const v = VALS[n], a = ageOf(n);
+  tip.innerHTML = `<b>${n}</b><br>총인구 ${a?a.total.toLocaleString():'-'}명<br>`+
+    (v==null?'-':`${fmt(v)} · 전국 ${NREG}곳 중 <b>${RANK[n]}위</b>`);
+  tip.hidden = false;
+  const r = document.getElementById('mapbox').getBoundingClientRect();   // 화면 밖으로 안 나가게
+  tip.style.left = Math.max(0, Math.min(e.clientX-r.left+14, r.width-tip.offsetWidth-2))+'px';
+  tip.style.top  = Math.max(0, e.clientY-r.top-tip.offsetHeight-10)+'px';
+}
+function hideTip(){ tip.hidden = true; }
+function pick(n){            // 지도·랭킹 클릭 → 아래 대시보드를 그 지역으로
+  if(!INDEX[n]) return;
+  const q = document.getElementById('q');
+  q.value = n; show(n);
+  q.scrollIntoView({behavior:'smooth', block:'start'});
+}
+document.getElementById('metric').addEventListener('change', ()=>{
+  document.getElementById('customAge').hidden = document.getElementById('metric').value!=='custom';
+  paint();
+});
+['ageLo','ageHi'].forEach(id=>document.getElementById(id).addEventListener('input', paint));
+['rankTop','rankLow'].forEach(id=>document.getElementById(id).addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(b) pick(b.dataset.n);
+}));
+
 document.getElementById('themes').addEventListener('click', e=>{
   const b = e.target.closest('button'); if(!b) return;
   document.body.dataset.theme = b.dataset.th; localStorage.setItem('pop_theme', b.dataset.th);
@@ -118,7 +269,10 @@ document.body.dataset.theme = st;
 document.querySelectorAll('.themes button').forEach(x=>x.classList.toggle('on', x.dataset.th===st));
 
 (async ()=>{
-  const buf = await (await fetch(DATA_URL)).arrayBuffer();
+  const [buf, mapData] = await Promise.all([
+    fetch(DATA_URL).then(r=>r.arrayBuffer()),
+    fetch(MAP_URL).then(r=>r.json()).catch(()=>fetch("sigungu_pop.json").then(r=>r.json()))   // 원격 실패 시 같은 폴더 파일로
+  ]);
   const text = new TextDecoder('euc-kr').decode(buf);   // 행안부 원본은 cp949 인코딩
   const lines = text.trim().split(/\r?\n/);
   HEADER = parseCSV(lines[0]);
@@ -130,6 +284,8 @@ document.querySelectorAll('.themes button').forEach(x=>x.classList.toggle('on', 
   });
   const q = document.getElementById('q'); q.value = 기본지역;
   q.addEventListener('input', ()=>{ if(INDEX[q.value]) show(q.value); });
+  buildMap(mapData.sigungu);
+  paint();
   show(기본지역);
 })().catch(e=>document.getElementById('cards').textContent = '⚠️ ' + e.message);
 </script>

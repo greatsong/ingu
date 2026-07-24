@@ -146,7 +146,8 @@
       <div class="step" data-go="2"><span class="em">📊</span><span class="pill"></span><span class="lbl">데이터</span></div>
       <div class="step" data-go="3"><span class="em">📈</span><span class="pill"></span><span class="lbl">시각화</span></div>
       <div class="step" data-go="4"><span class="em">✨</span><span class="pill"></span><span class="lbl">대시보드</span></div>
-      <div class="step" data-go="5"><span class="em">🏆</span><span class="pill"></span><span class="lbl">클리어</span></div>
+      <div class="step" data-go="5"><span class="em">🗺️</span><span class="pill"></span><span class="lbl">지도</span></div>
+      <div class="step" data-go="6"><span class="em">🏆</span><span class="pill"></span><span class="lbl">클리어</span></div>
     </div>
   </div>
 </header>
@@ -180,6 +181,7 @@
     <span class="r">📊 LV2 <em>데이터</em></span>
     <span class="r">📈 LV3 <em>시각화</em></span>
     <span class="r">✨ LV4 <em>대시보드</em></span>
+    <span class="r">🗺️ LV5 <em>지도</em></span>
     <span class="r">🏆 클리어</span>
   </div>
 
@@ -675,11 +677,388 @@ document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on
     총인구·고령화율·유소년 <b>지표 카드</b> + 예쁜 피라미드 + <b>테마 전환</b>까지 갖춘 대시보드가 완성됩니다. <b>다 됐으면 손 들어 알려주세요 🙋</b></div>
 </section>
 
+<!-- ═══ LEVEL 5 : 지도 ═══ -->
+<section class="page" id="p5">
+  <span class="lvtag">🗺️ LEVEL 5 · 지도</span><span class="mins">⏱ 약 10분</span>
+  <h1 class="title">전국 지도에 데이터를 색으로 입힌다</h1>
+  <p class="lead">지금까지는 <b>한 동네씩</b> 찾아봤죠. 이제 전국 시군구를 <b>색으로 칠한 지도</b>로 한 번에 봅니다. 마우스를 올리면 그 동네의 정보 카드가 따라오고, 클릭하면 아래 대시보드가 그 동네로 바뀌어요. 인사이트를 <b>'발견'</b>할 차례입니다.</p>
+  <div class="power"><small>이 레벨에서 얻는 능력</small>🗺️ 전국 데이터를 <b>지도로 읽고</b> 스스로 질문 던지기</div>
+
+  <div class="tabs" data-tabs>
+    <button class="tab active" data-t="code">📋 완성 코드로 · 다 함께</button>
+    <button class="tab" data-t="ai">🤖 AI로 직접 · 도전</button>
+  </div>
+
+  <div class="pane" data-p="ai" hidden>
+    <ol class="steps">
+      <li>같은 AI 창에 아래 프롬프트를 이어서 보내기 → 코드 교체 → <span class="path">Commit</span> → 새로고침 👇 <span class="hl">지도 데이터 주소가 이미 들어 있어요!</span></li>
+    </ol>
+    <div class="cbox">
+      <div class="cbox-head"><span class="cbox-label">🤖 AI 프롬프트 (전국 지도)</span><button class="copy">복사</button></div>
+      <textarea class="prompt" readonly style="height:340px">방금 만든 대시보드 제목 아래에 "🗺️ 전국에서 우리 동네는?" 지도 카드를 추가해줘. 기존 기능(지역 검색 + 지표 카드 + 인구 피라미드 + 테마 전환)은 그대로 유지하고, 전체 index.html 코드를 다시 통째로 줘.
+
+■ 지도 데이터 (JSON)
+https://raw.githubusercontent.com/greatsong/modudata/main/data/sigungu_pop.json
+- sigungu 목록에 전국 시군구가 하나씩 들어 있어. n은 지역 이름(인구 데이터의 지역 이름과 완전히 일치하니 그대로 연결하면 돼), c는 행정코드, p는 경위도 폴리곤 목록이야.
+- 같은 이름의 폴리곤이 여러 개 있을 수 있어(예: 충청북도 청주시). 이름이 같으면 같은 지역으로 취급해서 같은 색으로 칠하고, 같은 동작을 하게 해줘.
+
+■ 지도 그리기
+- 외부 지도 라이브러리 없이 SVG로 직접 그려줘. 경위도 좌표를 화면 좌표로 옮겨 시군구마다 폴리곤을 채우면 돼. 실제 우리나라 지도와 비슷한 가로세로 비율로 보이게 해줘.
+- 지표값이 높을수록 색이 진하게(밝은 크림 → 진한 주황), 지도 한쪽에 최소~최대 그라데이션 범례를 달아줘.
+
+■ 마우스를 올리면 정보 카드 (이번 업그레이드의 핵심!)
+- 시군구에 마우스를 올리면 그 동네가 살짝 밝아지고 테두리가 또렷해지면서, 마우스를 따라다니는 작고 깔끔한 정보 카드가 보이게 해줘.
+- 카드 내용: 지역 이름(굵게) / 총인구 / 지금 보고 있는 지표값(%) / 전국 순위("전국 251개 중 3위" 같은 식).
+- 카드는 둥근 모서리와 부드러운 그림자로 대시보드 분위기에 맞게, 화면 밖으로 삐져나가지 않게 해줘. 휴대폰에서는 손가락으로 탭하면 보이게.
+- 지도를 클릭하면 아래 대시보드가 그 지역으로 바뀌고, 대시보드 쪽으로 부드럽게 스크롤되게 해줘.
+
+■ 지표 고르기
+- 지도 위에 지표 선택 상자를 달아줘: 고령화율(65세 이상) / 유소년 비율(0~14세) / 청소년 비율(13~18세) / 만 14세 비율 / 영유아 비율(0~6세) / 0세 비율(갓 태어난 아기). 모두 그 연령 인구를 총인구로 나눈 비율이야. (출생률은 이 데이터에 없으니, 0세 비율이 그걸 엿보는 창이야.)
+- "직접 정하기"를 고르면 시작 나이와 끝 나이를 입력해서 원하는 구간의 비율 지도를 볼 수 있게 해줘.
+- 지도 아래에 현재 지표의 상위 5 · 하위 5 지역 목록을 보여주고, 지표를 바꾸면 지도 색·범례·순위 목록이 모두 함께 바뀌게 해줘. 목록의 지역을 클릭해도 지도를 클릭한 것과 똑같이 동작하게.</textarea>
+    </div>
+  </div>
+
+  <div class="pane" data-p="code">
+    <div class="cbox">
+      <div class="cbox-head"><span class="cbox-label">📄 완성 코드 · 전국 지도 대시보드</span><button class="copy">복사</button></div>
+      <textarea class="code" readonly>&lt;!DOCTYPE html&gt;
+&lt;html lang="ko"&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+&lt;title&gt;우리 동네 인구 구조 🏘️&lt;/title&gt;
+&lt;script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"&gt;&lt;/script&gt;
+&lt;style&gt;
+  :root{
+    --bg:#FFFDF7; --card:#FFF6E0; --border:#F0E2BC;
+    --accent:#E8930C; --gold:#F4B400; --text:#3A2E1A; --muted:#9A8B6A; --shadow:rgba(180,140,20,.18);
+  }
+  body[data-theme="mint"]{--bg:#F4FFFB;--card:#E7FBF3;--border:#C7F0E0;--accent:#0EA371;--gold:#34D399;--text:#0F3D2E;--muted:#6FA992;--shadow:rgba(16,185,129,.18);}
+  body[data-theme="berry"]{--bg:#FFF7FA;--card:#FFE9F1;--border:#FBD5E5;--accent:#E23C86;--gold:#F9A8D4;--text:#4A1D33;--muted:#B98098;--shadow:rgba(236,72,153,.18);}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);transition:background .3s;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;}
+  .wrap{max-width:600px;margin:0 auto;padding:24px 18px 48px;}
+  .themes{display:flex;gap:6px;justify-content:flex-end;margin-bottom:8px;}
+  .themes button{border:1px solid var(--border);background:#fff;color:var(--text);border-radius:99px;
+    padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .themes button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em;margin:.1rem 0;}
+  h1 .a{color:var(--accent);}
+  .under{width:60px;height:4px;border-radius:99px;margin:.4rem 0 .6rem;
+    background:linear-gradient(90deg,var(--gold),var(--accent));}
+  input#q{width:100%;font-size:1rem;padding:.6rem .7rem;border:1px solid var(--border);
+    border-radius:.7rem;background:#fff;color:var(--text);margin-bottom:14px;}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;
+    box-shadow:0 1px 4px var(--shadow);}
+  .card .k{font-size:.74rem;color:var(--muted);font-weight:700;}
+  .card .v{font-size:1.15rem;font-weight:800;color:var(--accent);margin-top:2px;}
+  #py{width:100%;}
+  .foot{color:var(--muted);font-size:.8rem;margin-top:14px;}
+  /* ── 지도 카드 ── */
+  .mapcard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;
+    box-shadow:0 1px 4px var(--shadow);margin-bottom:14px;}
+  .mapcard .mt{font-weight:800;margin-bottom:8px;}
+  .mctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;font-size:.85rem;font-weight:700;}
+  .mctl select,.mctl input{border:1px solid var(--border);border-radius:.6rem;padding:.35rem .5rem;
+    font-family:inherit;font-size:.88rem;background:#fff;color:var(--text);}
+  .mctl input{width:62px;}
+  .mapbox{position:relative;}
+  #map{width:100%;height:auto;display:block;}   /* 반응형: 가로 100% */
+  #map path{stroke:#fff;stroke-width:.4;cursor:pointer;}
+  #map path.hl{stroke:var(--accent);stroke-width:1.1;filter:brightness(1.12);}
+  .lgd{position:absolute;left:4px;bottom:4px;display:flex;align-items:center;gap:6px;
+    font-size:.72rem;font-weight:700;color:var(--muted);background:rgba(255,255,255,.82);border-radius:8px;padding:3px 8px;}
+  .lgd .bar{width:90px;height:8px;border-radius:99px;background:linear-gradient(90deg,#FFF3D6,#D9480F);}
+  #tip{position:absolute;pointer-events:none;background:rgba(255,255,255,.97);border:1px solid var(--border);
+    border-radius:10px;padding:7px 10px;font-size:.78rem;line-height:1.45;box-shadow:0 3px 12px var(--shadow);
+    white-space:nowrap;z-index:5;color:#3A2E1A;}
+  #tip b{font-size:.84rem;}
+  .rank{font-size:.8rem;margin-top:8px;}
+  .rank button{border:1px solid var(--border);background:#fff;color:var(--text);border-radius:99px;
+    padding:2px 8px;font-size:.74rem;font-weight:700;cursor:pointer;font-family:inherit;margin:0 3px 4px 0;}
+  .rank button:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+  @media(max-width:560px){.cards{grid-template-columns:repeat(2,1fr);}}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="wrap"&gt;
+    &lt;div class="themes" id="themes"&gt;
+      &lt;button data-th="" class="on"&gt;🍞 크림&lt;/button&gt;
+      &lt;button data-th="mint"&gt;🌿 민트&lt;/button&gt;
+      &lt;button data-th="berry"&gt;🍓 베리&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;h1&gt;🏘️ 우리 동네 &lt;span class="a"&gt;인구 구조&lt;/span&gt;&lt;/h1&gt;
+    &lt;div class="under"&gt;&lt;/div&gt;
+
+    &lt;!-- 지도: 전국을 색으로 보고, 클릭하면 아래 대시보드가 그 지역으로 바뀜 --&gt;
+    &lt;div class="mapcard"&gt;
+      &lt;div class="mt"&gt;🗺️ 전국에서 우리 동네는?&lt;/div&gt;
+      &lt;div class="mctl"&gt;
+        &lt;select id="metric"&gt;
+          &lt;option value="65,100" selected&gt;고령화율 (65세 이상)&lt;/option&gt;
+          &lt;option value="0,14"&gt;유소년 비율 (0~14세)&lt;/option&gt;
+          &lt;option value="13,18"&gt;청소년 비율 (13~18세)&lt;/option&gt;
+          &lt;option value="14,14"&gt;만 14세 비율&lt;/option&gt;
+          &lt;option value="0,6"&gt;영유아 비율 (0~6세)&lt;/option&gt;
+          &lt;option value="0,0"&gt;0세 비율 (갓 태어난 아기)&lt;/option&gt;
+          &lt;option value="custom"&gt;✏️ 직접 입력&lt;/option&gt;
+        &lt;/select&gt;
+        &lt;span id="customAge" hidden&gt;만 &lt;input id="ageLo" type="number" value="0" min="0" max="100"&gt;세 ~
+          &lt;input id="ageHi" type="number" value="100" min="0" max="100"&gt;세&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="mapbox" id="mapbox"&gt;
+        &lt;svg id="map"&gt;&lt;/svg&gt;
+        &lt;div class="lgd"&gt;&lt;span id="lgMin"&gt;&lt;/span&gt;&lt;span class="bar"&gt;&lt;/span&gt;&lt;span id="lgMax"&gt;&lt;/span&gt;&lt;/div&gt;
+        &lt;div id="tip" hidden&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class="rank" id="rankTop"&gt;&lt;/div&gt;
+      &lt;div class="rank" id="rankLow"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;input id="q" list="regions" placeholder="동네 이름 입력 (예: 서울특별시 종로구)"&gt;
+    &lt;datalist id="regions"&gt;&lt;/datalist&gt;
+    &lt;div class="cards" id="cards"&gt;&lt;/div&gt;
+    &lt;div id="py"&gt;&lt;/div&gt;
+    &lt;p class="foot"&gt;데이터: 행정안전부 주민등록 인구(매월 자동 갱신)&lt;/p&gt;
+  &lt;/div&gt;
+
+&lt;script&gt;
+const 기본지역 = "서울특별시 종로구"; // ← 보고 싶은 지역으로 바꿔도 돼요
+const DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/population_latest.csv";
+const MAP_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/sigungu_pop.json";
+
+let HEADER = [], INDEX = {};
+const num = s =&gt; parseInt(String(s).replace(/[^0-9-]/g,''),10) || 0;   // 따옴표·천단위 쉼표 제거
+// 따옴표로 감싼 CSV 한 줄 파싱 (값 안에 쉼표가 있어 단순 split 불가)
+function parseCSV(line){const o=[];let c='',q=false;for(let i=0;i&lt;line.length;i++){const ch=line[i];if(ch==='"'){if(q&amp;&amp;line[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&amp;&amp;!q){o.push(c);c='';}else c+=ch;}o.push(c);return o;}
+const cleanName = s =&gt; s.replace(/\s*\(\d+\)\s*$/,'').replace(/\s+/g,' ').trim();  // "서울…종로구 (1111…)" → "서울…종로구"
+
+function ageBySex(cells){
+  const m = new Array(101).fill(0), f = new Array(101).fill(0);
+  for(let i=1;i&lt;HEADER.length;i++){
+    const mm = HEADER[i].match(/_(\d+)세/); if(!mm) continue;   // 총인구수·연령구간 열은 건너뜀
+    const a = Math.min(100, +mm[1]);
+    if(HEADER[i].includes('_남_')) m[a]+=num(cells[i]);
+    else if(HEADER[i].includes('_여_')) f[a]+=num(cells[i]);    // _계_ 열은 무시(남+여만)
+  }
+  return { m, f };
+}
+const rsum = (a,lo,hi)=&gt;{ let s=0; for(let i=lo;i&lt;=hi;i++) s+=a[i]; return s; };
+
+function drawPyramid(m, f){
+  const ages=Array.from({length:101},(_,i)=&gt;i);   // 0~100세(100+) 1세 단위
+  const mx=Math.max(...m,...f,1);
+  const step=Math.max(500, Math.ceil(mx/4/500)*500), lim=Math.ceil(mx/step)*step;
+  const tv=[]; for(let v=-lim; v&lt;=lim; v+=step) tv.push(v);
+  Plotly.react('py',[
+    {y:ages,x:m.map(v=&gt;-v),name:'남자',type:'bar',orientation:'h',marker:{color:'#4C8DF6'},
+     customdata:m,hovertemplate:'%{y}세 · 남 %{customdata:,}명&lt;extra&gt;&lt;/extra&gt;'},
+    {y:ages,x:f,name:'여자',type:'bar',orientation:'h',marker:{color:'#F4789B'},
+     hovertemplate:'%{y}세 · 여 %{x:,}명&lt;extra&gt;&lt;/extra&gt;'}
+  ],{
+    barmode:'relative', bargap:0.15, height:560, margin:{l:46,r:14,t:6,b:28},
+    paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+    font:{family:'-apple-system,"Malgun Gothic",sans-serif',size:12,color:'#333'},
+    legend:{orientation:'h',x:0.5,xanchor:'center',y:1.03},
+    xaxis:{tickvals:tv,ticktext:tv.map(v=&gt;Math.abs(v).toLocaleString()),zeroline:true,zerolinecolor:'#ccc',gridcolor:'rgba(0,0,0,.06)',fixedrange:true},
+    yaxis:{dtick:10,ticksuffix:'세',range:[-0.6,100.6],fixedrange:true}
+  },{displayModeBar:false,responsive:true});
+}
+
+function show(name){
+  const cells = INDEX[name]; if(!cells) return;
+  const {m,f} = ageBySex(cells);
+  const mT = rsum(m,0,100), fT = rsum(f,0,100), total = mT+fT;
+  const old = rsum(m,65,100)+rsum(f,65,100), young = rsum(m,0,14)+rsum(f,0,14);
+  const pct = n =&gt; total ? (n/total*100).toFixed(1)+'%' : '-';
+  document.getElementById('cards').innerHTML = `
+    &lt;div class="card"&gt;&lt;div class="k"&gt;총인구&lt;/div&gt;&lt;div class="v"&gt;${total.toLocaleString()}&lt;/div&gt;&lt;/div&gt;
+    &lt;div class="card"&gt;&lt;div class="k"&gt;남 / 여&lt;/div&gt;&lt;div class="v" style="font-size:.92rem"&gt;${mT.toLocaleString()}&lt;br&gt;${fT.toLocaleString()}&lt;/div&gt;&lt;/div&gt;
+    &lt;div class="card"&gt;&lt;div class="k"&gt;고령화율 65+&lt;/div&gt;&lt;div class="v"&gt;${pct(old)}&lt;/div&gt;&lt;/div&gt;
+    &lt;div class="card"&gt;&lt;div class="k"&gt;유소년 0-14&lt;/div&gt;&lt;div class="v"&gt;${pct(young)}&lt;/div&gt;&lt;/div&gt;`;
+  drawPyramid(m, f);
+}
+
+/* ───────── 지도 ───────── */
+const AGE = {}, VALS = {}, RANK = {};   // 나이 배열 캐시 · 현재 지표값 · 전국 순위
+let MAPREG = [], NREG = 0;              // [{n:지역명, el:path}]
+
+function ageOf(name){        // 나이별 인구(남+여 합) — 지역당 1번만 계산해 저장
+  if(AGE[name]) return AGE[name];
+  const cells = INDEX[name]; if(!cells) return null;
+  const {m,f} = ageBySex(cells);
+  const arr = m.map((v,i)=&gt;v+f[i]);
+  return AGE[name] = { arr, total: rsum(arr,0,100) };
+}
+function metricRange(){      // 선택된 지표의 나이 구간 [시작, 끝]
+  const sel = document.getElementById('metric').value;
+  if(sel !== 'custom') return sel.split(',').map(Number);
+  const cl = v =&gt; Math.min(100, Math.max(0, parseInt(v,10)||0));
+  let lo = cl(document.getElementById('ageLo').value), hi = cl(document.getElementById('ageHi').value);
+  return lo&lt;=hi ? [lo,hi] : [hi,lo];
+}
+const fmt = v =&gt; v.toFixed(v&lt;10?2:1)+'%';
+const 시도약칭 = {'강원특별자치도':'강원','경기도':'경기','경상남도':'경남','경상북도':'경북','광주광역시':'광주','대구광역시':'대구','대전광역시':'대전','부산광역시':'부산','서울특별시':'서울','세종특별자치시':'세종','울산광역시':'울산','인천광역시':'인천','전라남도':'전남','전북특별자치도':'전북','제주특별자치도':'제주','충청남도':'충남','충청북도':'충북'};
+const 짧은이름 = n =&gt; { const [a,...r]=n.split(' '); const s=시도약칭[a]||a.slice(0,2); return r.length ? s+' '+r.join(' ') : s; };
+
+function buildMap(list){
+  // 투영: x=경도×cos(36°) (위도 보정), y=－위도. ×100은 보기 좋은 숫자 크기로
+  const kx = Math.cos(36*Math.PI/180)*100, ky = 100;
+  const px = lon =&gt; lon*kx, py = lat =&gt; -lat*ky;
+  let x0=1e9, y0=1e9, x1=-1e9, y1=-1e9;
+  list.forEach(g=&gt;g.p.forEach(poly=&gt;poly.forEach(ring=&gt;ring.forEach(pt=&gt;{
+    const x=px(pt[0]), y=py(pt[1]);
+    if(x&lt;x0)x0=x; if(x&gt;x1)x1=x; if(y&lt;y0)y0=y; if(y&gt;y1)y1=y;
+  }))));
+  const svg = document.getElementById('map');
+  svg.setAttribute('viewBox', `${(x0-2).toFixed(1)} ${(y0-2).toFixed(1)} ${(x1-x0+4).toFixed(1)} ${(y1-y0+4).toFixed(1)}`);
+  const dByName = new Map();   // 같은 이름(청주시 3조각)은 path 하나로 합침
+  list.forEach(g=&gt;{
+    let d='';
+    g.p.forEach(poly=&gt;poly.forEach(ring=&gt;{
+      d += 'M'+ring.map(pt=&gt;px(pt[0]).toFixed(1)+' '+py(pt[1]).toFixed(1)).join('L')+'Z';
+    }));
+    dByName.set(g.n, (dByName.get(g.n)||'')+d);
+  });
+  dByName.forEach((d,n)=&gt;{
+    const el = document.createElementNS('http://www.w3.org/2000/svg','path');
+    el.setAttribute('d', d);
+    el.addEventListener('pointerenter', ()=&gt;{ el.classList.add('hl'); svg.appendChild(el); });  // 하이라이트(외곽선이 안 가리게 맨 위로)
+    el.addEventListener('pointermove', e=&gt;showTip(e,n));
+    el.addEventListener('pointerdown', e=&gt;showTip(e,n));   // 모바일 터치도 툴팁
+    el.addEventListener('pointerleave', ()=&gt;{ el.classList.remove('hl'); hideTip(); });
+    el.addEventListener('click', ()=&gt;pick(n));
+    svg.appendChild(el);
+    MAPREG.push({n, el});
+  });
+}
+function paint(){            // 지표에 맞게 색 칠하기 + 범례 + 랭킹
+  const [lo,hi] = metricRange();
+  const vs = [];
+  MAPREG.forEach(({n})=&gt;{
+    const a = ageOf(n);
+    const v = (a &amp;&amp; a.total) ? rsum(a.arr,lo,hi)/a.total*100 : null;
+    VALS[n] = v; if(v!=null) vs.push(v);
+  });
+  const vMin = Math.min(...vs), vMax = Math.max(...vs);
+  const t2c = t =&gt; `rgb(${Math.round(255+(217-255)*t)},${Math.round(243+(72-243)*t)},${Math.round(214+(15-214)*t)})`;  // 크림→주황
+  MAPREG.forEach(({n,el})=&gt;{
+    const v = VALS[n];
+    el.setAttribute('fill', v==null ? '#eee' : t2c((v-vMin)/(vMax-vMin||1)));
+  });
+  document.getElementById('lgMin').textContent = fmt(vMin);
+  document.getElementById('lgMax').textContent = fmt(vMax);
+  const sorted = MAPREG.filter(({n})=&gt;VALS[n]!=null).map(({n})=&gt;n).sort((a,b)=&gt;VALS[b]-VALS[a]);
+  NREG = sorted.length; sorted.forEach((n,i)=&gt;RANK[n]=i+1);   // 전국 순위(내림차순)
+  const btns = ns =&gt; ns.map(n=&gt;`&lt;button data-n="${n}"&gt;${짧은이름(n)} ${fmt(VALS[n])}&lt;/button&gt;`).join('');
+  document.getElementById('rankTop').innerHTML = '🏆 상위 5 · '+btns(sorted.slice(0,5));
+  document.getElementById('rankLow').innerHTML = '🐢 하위 5 · '+btns(sorted.slice(-5).reverse());
+}
+const tip = document.getElementById('tip');
+function showTip(e,n){
+  const v = VALS[n], a = ageOf(n);
+  tip.innerHTML = `&lt;b&gt;${n}&lt;/b&gt;&lt;br&gt;총인구 ${a?a.total.toLocaleString():'-'}명&lt;br&gt;`+
+    (v==null?'-':`${fmt(v)} · 전국 ${NREG}곳 중 &lt;b&gt;${RANK[n]}위&lt;/b&gt;`);
+  tip.hidden = false;
+  const r = document.getElementById('mapbox').getBoundingClientRect();   // 화면 밖으로 안 나가게
+  tip.style.left = Math.max(0, Math.min(e.clientX-r.left+14, r.width-tip.offsetWidth-2))+'px';
+  tip.style.top  = Math.max(0, e.clientY-r.top-tip.offsetHeight-10)+'px';
+}
+function hideTip(){ tip.hidden = true; }
+function pick(n){            // 지도·랭킹 클릭 → 아래 대시보드를 그 지역으로
+  if(!INDEX[n]) return;
+  const q = document.getElementById('q');
+  q.value = n; show(n);
+  q.scrollIntoView({behavior:'smooth', block:'start'});
+}
+document.getElementById('metric').addEventListener('change', ()=&gt;{
+  document.getElementById('customAge').hidden = document.getElementById('metric').value!=='custom';
+  paint();
+});
+['ageLo','ageHi'].forEach(id=&gt;document.getElementById(id).addEventListener('input', paint));
+['rankTop','rankLow'].forEach(id=&gt;document.getElementById(id).addEventListener('click', e=&gt;{
+  const b = e.target.closest('button'); if(b) pick(b.dataset.n);
+}));
+
+document.getElementById('themes').addEventListener('click', e=&gt;{
+  const b = e.target.closest('button'); if(!b) return;
+  document.body.dataset.theme = b.dataset.th; localStorage.setItem('pop_theme', b.dataset.th);
+  document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on', x===b));
+});
+const st = localStorage.getItem('pop_theme') || '';
+document.body.dataset.theme = st;
+document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on', x.dataset.th===st));
+
+(async ()=&gt;{
+  const [buf, mapData] = await Promise.all([
+    fetch(DATA_URL).then(r=&gt;r.arrayBuffer()),
+    fetch(MAP_URL).then(r=&gt;r.json()).catch(()=&gt;fetch("sigungu_pop.json").then(r=&gt;r.json()))   // 원격 실패 시 같은 폴더 파일로
+  ]);
+  const text = new TextDecoder('euc-kr').decode(buf);   // 행안부 원본은 cp949 인코딩
+  const lines = text.trim().split(/\r?\n/);
+  HEADER = parseCSV(lines[0]);
+  const dl = document.getElementById('regions');
+  lines.slice(1).forEach(line=&gt;{
+    const cells = parseCSV(line); const name = cleanName(cells[0]);
+    INDEX[name] = cells;
+    const o = document.createElement('option'); o.value = name; dl.appendChild(o);
+  });
+  const q = document.getElementById('q'); q.value = 기본지역;
+  q.addEventListener('input', ()=&gt;{ if(INDEX[q.value]) show(q.value); });
+  buildMap(mapData.sigungu);
+  paint();
+  show(기본지역);
+})().catch(e=&gt;document.getElementById('cards').textContent = '⚠️ ' + e.message);
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</textarea>
+    </div>
+  </div>
+
+  <div class="box check"><b>✅ 이렇게 되면 성공!</b>
+    전국 시군구가 <b>색으로 칠해진 지도</b>가 뜨고, 마우스를 올리면 <b>동네 이름·총인구·지표값·전국 순위</b>가 담긴 카드가 따라다닙니다. 클릭하면 아래 대시보드가 그 지역으로! <b>다 됐으면 손 들어 알려주세요 🙋</b></div>
+
+  <div class="box dare"><b>⭐ 응용 — 지표를 바꿔가며 놀아보기</b>
+    지도가 뜨면 끝이 아니라 시작입니다. 아래 프롬프트를 <b>하나씩</b> 같은 AI 창에 보내 보세요.</div>
+
+  <div class="cbox">
+    <div class="cbox-head"><span class="cbox-label">🎯 응용 1 · 중학교 입학생 지도</span><button class="copy">복사</button></div>
+    <textarea class="prompt" readonly style="height:58px">지도의 지표를 만 14세 비율로 바꿔서, 어느 동네에 중학교 입학생이 많은지 보여줘.</textarea>
+  </div>
+  <div class="cbox">
+    <div class="cbox-head"><span class="cbox-label">🎯 응용 2 · 서울만 확대</span><button class="copy">복사</button></div>
+    <textarea class="prompt" readonly style="height:58px">서울특별시만 확대해서 보는 버튼을 추가해줘. 다시 전국으로 돌아오는 버튼도 함께.</textarea>
+  </div>
+  <div class="cbox">
+    <div class="cbox-head"><span class="cbox-label">🎯 응용 3 · 상위 10 막대 그래프</span><button class="copy">복사</button></div>
+    <textarea class="prompt" readonly style="height:58px">지금 보고 있는 지표의 상위 10개 지역을 지도 옆에 막대 그래프로 보여줘.</textarea>
+  </div>
+  <div class="cbox">
+    <div class="cbox-head"><span class="cbox-label">🎯 응용 4 · 우리 동네 찾기 (자유 아이디어)</span><button class="copy">복사</button></div>
+    <textarea class="prompt" readonly style="height:58px">검색창에서 고른 우리 동네가 지도 어디에 있는지 반짝이며 표시되게 해줘.</textarea>
+  </div>
+
+  <div class="box think"><b>🤔 발견 1 · 두 명 중 한 명이 65세 이상인 동네</b>
+    고령화율 지도에서 <b>가장 진한 동네</b>는 어디일까요? 그리고 진한 동네들은 전국 어디에 <b>몰려</b> 있나요? 상위 5 목록과 지도를 함께 보며 이유를 추측해 보세요.
+    <small style="display:block;margin-top:7px;color:var(--muted);font-size:12.5px;font-weight:600;">✔ 데이터로 확인 · 1위 경북 의성군 <b>50.11%</b> — 주민 두 명 중 한 명이 65세 이상입니다. 2위 대구 군위군 49.93%, 3위 경남 합천군 48.70%. 반대로 가장 낮은 곳은 수원 영통구(10.95%)·화성시(12.12%)·세종(12.76%)이에요.</small></div>
+
+  <div class="box think"><b>🤔 발견 2 · 갓 태어난 아기는 어디에 많을까</b>
+    지표를 <b>0세 비율</b>로 바꿔 보세요. 상위 동네들의 공통점은 뭘까요? 신도시? 새 아파트? 부모의 직장?
+    <small style="display:block;margin-top:7px;color:var(--muted);font-size:12.5px;font-weight:600;">✔ 데이터로 확인 · 1위는 뜻밖에도 <b>대구 중구(0.93%)</b>, 2위 화성시(0.88%), 공동 3위 부산 강서구·과천시(0.87%). 대도시 원도심 재개발 새 아파트와 신도시가 나란히 상위권 — 두 유형의 공통점과 차이를 이야기해 보세요.</small></div>
+
+  <div class="box think"><b>🤔 발견 3 · 뒤집으면 똑같은 지도?</b>
+    <b>고령화율</b> 지도와 <b>유소년 비율</b> 지도를 번갈아 보세요. 진한 곳과 옅은 곳이 거의 <b>거울처럼 뒤집혀</b> 보이지 않나요? 왜 그럴까요?
+    <small style="display:block;margin-top:7px;color:var(--muted);font-size:12.5px;font-weight:600;">✔ 데이터로 확인 · 고령화율 1·2위인 의성군(유소년 4.45%)·군위군(3.46%)은 유소년 비율에서 나란히 최하위권입니다. 유소년 1위는 부산 강서구(18.17%), 만 14세 비율 1위는 세종(1.49%) — 어른의 이동이 곧 아이의 지도를 그립니다.</small></div>
+</section>
+
 <!-- ═══ CLEAR ═══ -->
-<section class="page cover" id="p5">
+<section class="page cover" id="p6">
   <div class="emoji">🏆🎉</div>
   <h1 style="font-size:32px;margin:12px 0 4px;">미션 클리어!</h1>
-  <p class="sub">아이디어 → AI로 코드 → 깃허브 배포 → <b>진짜 인구 데이터 대시보드</b>까지 해냈습니다.</p>
+  <p class="sub">아이디어 → AI로 코드 → 깃허브 배포 → 대시보드 → <b>전국 지도</b>까지 해냈습니다.</p>
 
   <div class="mission">
     <h3>🔎 이제 데이터가 말을 겁니다</h3>
@@ -695,7 +1074,8 @@ document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on
     <ul>
       <li>① 깃허브의 <b>공공데이터(CSV)</b> 불러와 파싱하기</li>
       <li>② 데이터를 <b>그래프(인구 피라미드)</b>로 시각화하기</li>
-      <li>③ <b>깃허브 페이지</b>로 세상에 배포하기</li>
+      <li>③ 전국 데이터를 <b>지도에 색으로</b> 입혀 비교하기</li>
+      <li>④ <b>깃허브 페이지</b>로 세상에 배포하기</li>
     </ul>
   </div>
 
@@ -733,11 +1113,11 @@ document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on
 <div id="toast"><div class="card" id="toastSub"></div></div>
 
 <script>
-  const ACCENTS = ['#E8930C','#E8930C','#3E7BE0','#16A34A','#E23C86','#EAB308'];
-  const SOFT    = ['#FFF3DE','#FFF0D6','#EAF2FF','#E7F6ED','#FDE7F1','#FEF6DA'];
-  const LABELS  = ['표지','LEVEL 1 · 배포','LEVEL 2 · 데이터','LEVEL 3 · 시각화','LEVEL 4 · 대시보드','🏆 클리어'];
-  const UP_SUB  = ['','🚀 LEVEL 1 · 인터넷에 올리기','📊 LEVEL 2 · 데이터 불러오기','📈 LEVEL 3 · 그래프 그리기','✨ LEVEL 4 · 대시보드 꾸미기','🏆 미션 클리어!'];
-  const N = 6;
+  const ACCENTS = ['#E8930C','#E8930C','#3E7BE0','#16A34A','#E23C86','#D9480F','#EAB308'];
+  const SOFT    = ['#FFF3DE','#FFF0D6','#EAF2FF','#E7F6ED','#FDE7F1','#FDEBDD','#FEF6DA'];
+  const LABELS  = ['표지','LEVEL 1 · 배포','LEVEL 2 · 데이터','LEVEL 3 · 시각화','LEVEL 4 · 대시보드','LEVEL 5 · 지도','🏆 클리어'];
+  const UP_SUB  = ['','🚀 LEVEL 1 · 인터넷에 올리기','📊 LEVEL 2 · 데이터 불러오기','📈 LEVEL 3 · 그래프 그리기','✨ LEVEL 4 · 대시보드 꾸미기','🗺️ LEVEL 5 · 전국 지도로 보기','🏆 미션 클리어!'];
+  const N = 7;
   let cur = 0, maxReached = 0;
 
   function go(i){
