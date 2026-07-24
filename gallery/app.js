@@ -90,13 +90,13 @@
       return demoApps;
     }
     const { data: apps, error: appsErr } = await supabaseClient
-      .from("apps")
+      .from("ingu_apps")
       .select("*")
       .order("created_at", { ascending: false });
     if (appsErr) throw appsErr;
 
     const { data: fbRows, error: fbErr } = await supabaseClient
-      .from("feedback")
+      .from("ingu_feedback")
       .select("*")
       .order("created_at", { ascending: true });
     if (fbErr) throw fbErr;
@@ -125,7 +125,7 @@
       return newApp;
     }
     const { data, error } = await supabaseClient
-      .from("apps")
+      .from("ingu_apps")
       .insert([payload])
       .select()
       .single();
@@ -142,7 +142,7 @@
       app.likes += 1;
       return app.likes;
     }
-    const { data, error } = await supabaseClient.rpc("increment_likes", { p_app_id: appId });
+    const { data, error } = await supabaseClient.rpc("increment_ingu_likes", { p_app_id: appId });
     if (error) throw error;
     const app = appsCache.find((a) => a.id === appId);
     if (app) app.likes = data;
@@ -157,7 +157,7 @@
       return;
     }
     const { error } = await supabaseClient
-      .from("feedback")
+      .from("ingu_feedback")
       .insert([{ app_id: appId, nickname, content }]);
     if (error) throw error;
     const app = appsCache.find((a) => a.id === appId);

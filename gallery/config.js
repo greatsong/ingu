@@ -9,7 +9,9 @@
 // ⚠️ 반드시 "publishable"(공개용 anon) 키만 넣으세요. secret 키는 절대 넣지 마세요.
 // 설정 방법은 SETUP.md 참고.
 // ============================================================
+// snui(병아리반) 갤러리와 같은 Supabase 프로젝트를 공유한다.
+// 테이블은 ingu_apps / ingu_feedback 으로 분리되어 데이터가 섞이지 않는다.
 window.APP_CONFIG = {
-  SUPABASE_URL: "",
-  SUPABASE_KEY: ""
+  SUPABASE_URL: "https://ipcherzsnaevkkjrclvn.supabase.co",
+  SUPABASE_KEY: "sb_publishable_AuRR576neh5CoGt1dZM4_g_vov4KtVm"
 };
