@@ -371,15 +371,14 @@ function show(name){
     </ol>
     <div class="cbox">
       <div class="cbox-head"><span class="cbox-label">🤖 AI 프롬프트 (이어서 대화)</span><button class="copy">복사</button></div>
-      <textarea class="prompt" readonly style="height:180px">방금 만든 인구 페이지에 "인구 피라미드"를 추가해줘. 전체 코드를 다시 통째로 줘.
+      <textarea class="prompt" readonly style="height:180px">방금 만든 인구 페이지에 "인구 피라미드"를 추가해줘. 전체 index.html 코드를 다시 통째로 줘.
 
 - 차트는 Plotly(플롯리)로 깔끔하게 그려줘. &lt;head&gt;에 &lt;script src="https://cdn.plot.ly/plotly-2.35.2.min.js"&gt;&lt;/script&gt; 를 넣고.
 - 나이 1세 단위(0~100세), 남자는 왼쪽(음수 값)·여자는 오른쪽 가로 막대(barmode: 'relative'). 남/여 색 다르게, 범례 표시.
 - x축 눈금은 절댓값으로 보이게(음수 라벨 숨김), 배경은 투명(paper_bgcolor·plot_bgcolor를 'rgba(0,0,0,0)'), 툴바는 숨김(displayModeBar:false, responsive:true).</textarea>
     </div>
     <ol class="steps" start="2" style="counter-reset:s 1;">
-      <li>깃허브에서 <span class="path">Add file</span> ▸ <span class="path">Create new file</span> ▸ 파일 이름 <span class="kbd">pyramid.html</span> ▸ 코드 붙여넣기 ▸ <span class="path">Commit</span> <span class="hl">(index.html은 그대로 두세요 — 단계별로 남겨둡니다)</span></li>
-      <li>새 주소로 접속: <span class="kbd">내아이디.github.io/저장소이름/pyramid.html</span></li>
+      <li>새 코드를 깃허브 <span class="kbd">index.html</span>에 <b>통째로 교체</b> → <span class="path">Commit</span> → <b>새로고침</b></li>
     </ol>
   </div>
 
@@ -486,7 +485,7 @@ function show(name){
     <b>도전(여유되면)</b>: 위 <span class="path">🤖 AI로 직접</span> 탭을 열어 AI에게 딱 하나만 — <b>"막대 색을 바꿔줘"</b> 또는 <b>"나이를 10세 단위로 묶어줘"</b><br>
     🚧 <b>색·묶음 정도만!</b> 준비되면 다음 레벨 ▶</div>
   <div class="box check"><b>✅ 이렇게 되면 성공!</b>
-    남자(왼쪽)·여자(오른쪽)가 연령대별로 뻗어나가는 <b>인구 피라미드</b>가 그려집니다. 이제 <b>내 페이지가 2개</b>가 됐어요. <b>다 됐으면 손 들어 알려주세요 🙋</b></div>
+    남자(왼쪽)·여자(오른쪽)가 연령대별로 뻗어나가는 <b>인구 피라미드</b>가 그려집니다. <b>다 됐으면 손 들어 알려주세요 🙋</b></div>
   <div class="box think"><b>🤔 이렇게 해보세요</b>
     검색창에 <b>다른 동네</b>를 넣어 비교해보세요. 신도시와 시골, 피라미드 모양이 완전히 다를 거예요!</div>
 </section>
@@ -505,12 +504,11 @@ function show(name){
 
   <div class="pane" data-p="ai" hidden>
     <ol class="steps">
-      <li>같은 AI 창에 아래 프롬프트를 이어서 보내기 👇</li>
-      <li>다시 <span class="path">Add file</span> ▸ <span class="path">Create new file</span> ▸ 파일 이름 <span class="kbd">dashboard.html</span> ▸ 붙여넣기 ▸ <span class="path">Commit</span> ▸ <span class="kbd">…/dashboard.html</span> 접속</li>
+      <li>같은 AI 창에 아래 프롬프트를 이어서 보내기 → 코드 교체 → <span class="path">Commit</span> → 새로고침 👇</li>
     </ol>
     <div class="cbox">
       <div class="cbox-head"><span class="cbox-label">🤖 AI 프롬프트 (밝은 대시보드)</span><button class="copy">복사</button></div>
-      <textarea class="prompt" readonly style="height:250px">이제 대시보드처럼 밝고 예쁘게 업그레이드해줘. 전체 코드를 다시 통째로 줘. 기능(지역 검색 + 인구 피라미드)은 그대로 유지.
+      <textarea class="prompt" readonly style="height:250px">이제 대시보드처럼 밝고 예쁘게 업그레이드해줘. 전체 index.html 코드를 다시 통째로 줘. 기능(지역 검색 + 인구 피라미드)은 그대로 유지.
 
 - 밝은 크림/골드 톤 배경, 둥근 모서리, 부드러운 그림자.
 - 상단에 지표 카드 4개: 총인구 / 남·여 / 고령화율(65세 이상 비율) / 유소년(0-14세 비율).
@@ -669,7 +667,7 @@ document.querySelectorAll('.themes button').forEach(x=&gt;x.classList.toggle('on
     <b>도전(여유되면)</b>: 위 <span class="path">🤖 AI로 직접</span> 탭을 열어 AI에게 딱 하나만 — <b>"우리 학교 상징색으로 테마를 하나 추가해줘"</b> 또는 <b>"고령화율이 20%를 넘으면 숫자를 빨갛게"</b><br>
     🚧 <b>하나만!</b> 욕심나면 마무리 후에 마음껏.</div>
   <div class="box check"><b>✅ 이렇게 되면 성공!</b>
-    총인구·고령화율·유소년 <b>지표 카드</b> + 예쁜 피라미드 + <b>테마 전환</b>까지 갖춘 대시보드가 완성됩니다. <b>내가 만든 페이지 3개</b>(index · pyramid · dashboard)가 모두 살아 있어요. <b>다 됐으면 손 들어 알려주세요 🙋</b></div>
+    총인구·고령화율·유소년 <b>지표 카드</b> + 예쁜 피라미드 + <b>테마 전환</b>까지 갖춘 대시보드가 완성됩니다. <b>다 됐으면 손 들어 알려주세요 🙋</b></div>
 </section>
 
 <!-- ═══ CLEAR ═══ -->
