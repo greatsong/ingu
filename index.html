@@ -107,6 +107,10 @@
   .prereq .pr-soft{color:#7A6A48;}
   .prereq .pr-how{margin-top:12px; background:#fff; border:1px dashed var(--gold); border-radius:10px;
     padding:10px 12px; font-size:14px; font-weight:700; color:var(--ink);}
+  .source{max-width:640px; margin:6px 0 16px; padding:14px 18px; border-radius:14px; background:#fff; border:1.5px dashed var(--gold); text-align:left;}
+  .source .src-h{display:block; font-size:1.02rem; margin-bottom:6px;}
+  .source p{margin:0 0 10px; line-height:1.65; word-break:keep-all;}
+  .source .src-go{display:inline-block; font-weight:800; text-decoration:none; color:#fff; background:var(--accent); padding:8px 14px; border-radius:10px;}
   .insight-link{display:block; max-width:560px; margin:0 auto 22px; padding:12px 16px; border-radius:14px; background:#fff;
     border:1.5px solid var(--gold); color:inherit; text-decoration:none; font-weight:700; text-align:center; box-shadow:0 4px 14px rgba(0,0,0,.06);}
   .insight-link:hover{transform:translateY(-1px);}
@@ -239,6 +243,11 @@
 <section class="page" id="p2">
   <span class="lvtag">📊 LEVEL 2 · 데이터</span><span class="mins">⏱ 약 12분</span>
   <h1 class="title">우리 동네 인구 데이터를 불러온다</h1>
+  <div class="source">
+    <b class="src-h">📍 이 데이터는 어디서 왔을까요?</b>
+    <p>이 데이터는 행정안전부가 매달 공개하는 주민등록 인구통계의 연령별 인구현황이에요. 전국 읍·면·동마다 나이별과 성별 인구가 들어 있어요. 오늘 쓰는 CSV 파일은 이 원본을 그대로 받아 깃허브에 올려 둔 것으로, 매달 자동으로 새 파일로 바뀌어요. 행정안전부 사이트에 직접 들어가 확인해 보실 수 있어요.</p>
+    <a class="src-go" href="https://jumin.mois.go.kr/" target="_blank" rel="noopener">행정안전부 사이트에서 직접 보기 →</a>
+  </div>
   <p class="lead">깃허브에 올라가 있는 <b>전국 인구 데이터(CSV) 주소</b>를 AI에게 건네주면, 그 데이터를 불러와 지역별로 보여주는 <b>코드가 알아서 완성</b>됩니다.</p>
   <div class="power"><small>이 레벨에서 얻는 능력</small>📊 깃허브에 저장된 <b>공공데이터(CSV)</b>를 내 앱으로 불러오기</div>
 
