@@ -269,23 +269,16 @@
     </ol>
     <div class="cbox">
       <div class="cbox-head"><span class="cbox-label">🤖 AI 프롬프트 (주소 포함 · 그대로 복사)</span><button class="copy">복사</button></div>
-      <textarea class="prompt" readonly style="height:240px">아래 주소의 CSV는 우리나라 행정구역별·연령별·성별 인구 데이터야.
+      <textarea class="prompt" readonly style="height:240px">아래 주소에 우리나라 동네별 인구 데이터(CSV 파일)가 있어.
 https://raw.githubusercontent.com/greatsong/modudata/main/data/population_latest.csv
 
-이 데이터를 불러와서, 지역을 검색·선택하면 그 지역의 총인구와 남/여 인구를 보여주는 웹페이지를 index.html 파일 하나로 만들어줘. 설명은 짧게, 전체 코드를 코드블록으로 한 번에 줘.
+동네 이름을 검색해서 고르면 그 동네의 총인구, 남자 인구, 여자 인구를 보여 주는 웹페이지를 index.html 파일 하나로 만들어 줘.
 
-■ CSV 형식 (행정안전부 원본 그대로 — 다루기 까다로우니 잘 파싱해줘)
-- 인코딩은 cp949(euc-kr). fetch 후 arrayBuffer로 받아 TextDecoder('euc-kr')로 디코딩해야 한글이 안 깨져.
-- 모든 칸이 큰따옴표로 감싸여 있고 숫자에 천단위 콤마가 있어(예: "9,289,813"). 값 안에 콤마가 있으니 단순 split(',') 말고 따옴표를 고려해 파싱해줘.
-- 첫 칸 행정구역은 이름 뒤에 코드가 괄호로 붙어("서울특별시 종로구 (1111000000)") — 코드는 떼고 이름만 쓰게 해줘.
-- 나이 열 이름은 "YYYY년MM월_계_0세", "…_남_0세", "…_여_0세" 식이야(계/남/여 × 0~100세이상). 남녀 인구는 _남_ / _여_ 열만 쓰고 _계_ 는 무시해(안 그러면 두 배가 됨). 총인구수·연령구간인구수 같은 집계 열도 있으니 나이 열(_숫자세)만 골라 합산해줘.
-- 한 줄이 한 지역. 지역명으로 찾게 해줘. 지역이 3,900여 개니 datalist로 검색되게.
-
-■ 규칙
-- 외부 라이브러리 없이 순수 HTML + JavaScript 한 파일. fetch로 직접 불러와 파싱.
-- 숫자에 천단위 콤마 표시.
-
-</textarea>
+참고로 이 파일은 행정안전부에서 받은 원본 그대로라서
+- 한글이 EUC-KR로 저장되어 있고
+- 숫자에 쉼표가 들어 있어(예: "9,289,813").
+- 열 이름은 "2026년09월_남_총인구수", "2026년09월_여_5세"처럼 생겼어.
+- 지역 이름 뒤에 괄호로 붙은 숫자는 빼고 보여 줘.</textarea>
     </div>
     <ol class="steps" start="3" style="counter-reset:s 2;">
       <li>AI가 준 <b>index.html 코드 전체를 복사</b> → 깃허브 <span class="kbd cp" title="클릭하면 복사돼요">index.html</span> 편집(연필 ✏️) → <b>기존 내용 다 지우고</b> 붙여넣기 → <span class="path">Commit changes</span></li>
@@ -392,11 +385,9 @@ function show(name){
     </ol>
     <div class="cbox">
       <div class="cbox-head"><span class="cbox-label">🤖 AI 프롬프트 (이어서 대화)</span><button class="copy">복사</button></div>
-      <textarea class="prompt" readonly style="height:180px">방금 만든 인구 페이지에 "인구 피라미드"를 추가해줘. 전체 index.html 코드를 다시 통째로 줘.
-
-- 차트는 Plotly(플롯리)로 깔끔하게 그려줘. &lt;head&gt;에 &lt;script src="https://cdn.plot.ly/plotly-2.35.2.min.js"&gt;&lt;/script&gt; 를 넣고.
-- 나이 1세 단위(0~100세), 남자는 왼쪽(음수 값)·여자는 오른쪽 가로 막대(barmode: 'relative'). 남/여 색 다르게, 범례 표시.
-- x축 눈금은 절댓값으로 보이게(음수 라벨 숨김), 배경은 투명(paper_bgcolor·plot_bgcolor를 'rgba(0,0,0,0)'), 툴바는 숨김(displayModeBar:false, responsive:true).</textarea>
+      <textarea class="prompt" readonly style="height:180px">방금 만든 페이지에 인구 피라미드를 추가해 줘.
+나이별로 남자는 왼쪽, 여자는 오른쪽으로 막대를 그리고, 그래프는 Plotly로 그려 줘.
+전체 코드를 다시 줘.</textarea>
     </div>
     <ol class="steps" start="2" style="counter-reset:s 1;">
       <li>새 코드를 깃허브 <span class="kbd cp" title="클릭하면 복사돼요">index.html</span>에 <b>통째로 교체</b> → <span class="path">Commit</span> → <b>새로고침</b></li>
@@ -529,13 +520,10 @@ function show(name){
     </ol>
     <div class="cbox">
       <div class="cbox-head"><span class="cbox-label">🤖 AI 프롬프트 (밝은 대시보드)</span><button class="copy">복사</button></div>
-      <textarea class="prompt" readonly style="height:250px">이제 대시보드처럼 밝고 예쁘게 업그레이드해줘. 전체 index.html 코드를 다시 통째로 줘. 기능(지역 검색 + 인구 피라미드)은 그대로 유지.
-
-- 밝은 크림/골드 톤 배경, 둥근 모서리, 부드러운 그림자.
-- 상단에 지표 카드 4개: 총인구 / 남·여 / 고령화율(65세 이상 비율) / 유소년(0-14세 비율).
-- 인구 피라미드(Plotly)는 그대로 유지하되 배경 투명으로 페이지 톤과 어울리게.
-- 맨 위에 테마 전환 버튼 3개(🍞크림 / 🌿민트 / 🍓베리) — CSS 변수로 색만 바꾸는 방식.
-- 휴대폰에서도 예쁘게 보이도록 반응형으로.</textarea>
+      <textarea class="prompt" readonly style="height:250px">이제 대시보드처럼 밝고 예쁘게 꾸며 줘. 지금 기능은 그대로 두고, 코드는 간결하게 전체를 다시 줘.
+- 위쪽에 카드 4개: 총인구, 남녀 인구, 고령화율(65세 이상 비율), 유소년 비율(0~14세)
+- 크림, 민트, 베리 색 테마를 고르는 버튼 3개
+- 휴대폰에서도 예쁘게</textarea>
     </div>
     <div class="box tipbox"><b>🎨 진짜 바이브코딩은 여기서부터</b>
       프롬프트에 한 줄씩 더 시켜보세요 — <b>"내 고향을 기본값으로"</b>, <b>"고령화율이 20% 넘으면 빨갛게"</b>, <b>"두 지역을 나란히 비교"</b>. 말하는 대로 바뀝니다.</div>
